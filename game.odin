@@ -11,6 +11,8 @@ Tile :: struct {
 	isVisible:     bool,
 }
 
+tileTexture: rl.Texture2D
+
 Game_State :: struct {
 	initialized: bool,
 	playerPos:   Vec2i,
@@ -37,39 +39,38 @@ get_tile_xy :: proc(x: int, y: int) -> ^Tile {
 }
 
 get_tile_Vec2i :: proc(worldPos: Vec2i) -> ^Tile {
-	x := worldPos.x / TILE_SIZE
-	y := worldPos.y / TILE_SIZE
+	x := worldPos.x
+	y := worldPos.y
 
 	return get_tile(x, y)
 }
 
 screen_to_world :: proc(screen_pos: rl.Vector2) -> Vec2i {
 	xPos := f32(screen_pos.x) / TILE_SIZE / camera.zoom
-	xPos += camera.offset.x
 	yPos := f32(screen_pos.y) / TILE_SIZE / camera.zoom
-	yPos += camera.offset.y
-
 
 	return {int(xPos), int(yPos)}
 }
 
 
 init :: proc() {
-	rl.SetTargetFPS(60)
+	// rl.SetTargetFPS(60)
 	sFPS.show = true
 	camera = rl.Camera2D {
-		offset = rl.Vector2{160, 90},
+		offset = rl.Vector2{180, 90},
 		zoom   = 1,
 	}
-	rl.InitWindow(WORLD_WIDTH * TILE_SIZE / 2, WORLD_HEIGHT * TILE_SIZE / 2, "celeste")
+
+	rl.InitWindow(1280, 720, "celeste")
 	icon: rl.Image
 	icon = rl.LoadImage("./assets/ico.png")
 	rl.SetWindowIcon(icon)
+	tileTexture = rl.LoadTexture("./assets/tile_texture.png")
 }
 
 update :: proc() {
 
-	if rl.IsMouseButtonPressed(.LEFT) {
+	if rl.IsMouseButtonDown(.LEFT) {
 		worldPos := screen_to_world(rl.GetMousePosition())
 		tile := get_tile(worldPos)
 		if tile != nil {
@@ -85,28 +86,55 @@ update :: proc() {
 	}
 
 
-	// camera.zoom += rl.GetMouseWheelMove() * 0.05
+	camera.zoom += rl.GetMouseWheelMove() * 0.5
 }
 
 late_update :: proc() {
 }
-
 draw :: proc() {
-	for x in 0 ..< WORLD_GRID.x {
-		for y in 0 ..< WORLD_GRID.y {
-			tile := get_tile(x, y)
-			if (!tile.isVisible) {
+	worldPos := screen_to_world(rl.GetMousePosition())
+	// fmt.println(worldPos)
+	rl.DrawRectangleLines(
+		i32(worldPos.x) * TILE_SIZE - i32(camera.offset.x / camera.zoom),
+		i32(worldPos.y) * TILE_SIZE - i32(camera.offset.y / camera.zoom),
+		TILE_SIZE,
+		TILE_SIZE,
+		rl.BLUE,
+	)
+	for y in 0 ..< WORLD_HEIGHT {
+		for x in 0 ..< WORLD_WIDTH {
+			if (!g_Game_State.worldGrid[x][y].isVisible) {
 				continue
 			}
-			rl.DrawRectangleRec(
-				rl.Rectangle {
-					f32(x) * TILE_SIZE * 2 - camera.offset.x,
-					f32(y) * TILE_SIZE * 2 - camera.offset.y,
-					8 * TILE_SIZE * 2,
-					8 * TILE_SIZE * 2,
+			rl.DrawTextureV(
+				tileTexture,
+				{
+					f32(x) * TILE_SIZE - f32(camera.offset.x / camera.zoom),
+					f32(y) * TILE_SIZE - f32(camera.offset.y / camera.zoom),
 				},
-				rl.RED,
+				rl.WHITE,
 			)
+
+
 		}
 	}
 }
+
+// for &tile in g_Game_State.worldGrid {
+// 	fmt.println(tile)
+// 	// for y in 0 ..< WORLD_GRID.y {
+// 	tile := get_tile(0, 0)
+// 	if (!tile.isVisible) {
+// 		continue
+// 	}
+// 	rl.DrawRectangleRec(
+// 		rl.Rectangle {
+// 			f32(0) * TILE_SIZE * 2,
+// 			f32(0) * TILE_SIZE * 2,
+// 			8 * TILE_SIZE * 2,
+// 			8 * TILE_SIZE * 2,
+// 		},
+// 		rl.RED,
+// 	)
+// 	// }
+// }

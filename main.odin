@@ -15,9 +15,11 @@ sFPS := SFPS {
 	size  = 69,
 	color = rl.WHITE,
 }
-main :: proc() {
-	init()
 
+
+main :: proc() {
+	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
+	init()
 	for !rl.WindowShouldClose() {
 		TICK_TIMER -= rl.GetFrameTime()
 		LATE_TICK_TIMER -= rl.GetFrameTime()
