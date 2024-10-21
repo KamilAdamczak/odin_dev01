@@ -18,10 +18,10 @@ sFPS := SFPS {
 
 
 main :: proc() {
-	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
+	// rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	init()
 	for !rl.WindowShouldClose() {
-		TICK_TIMER -= rl.GetFrameTime()
+		TICK_TIMER -= rl.GetFrameTime() //get delta time
 		LATE_TICK_TIMER -= rl.GetFrameTime()
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.Color(BACKGROUND_COLOR))
@@ -30,18 +30,18 @@ main :: proc() {
 		if TICK_TIMER <= 0 {
 
 			update()
-
+			draw()
 			TICK_TIMER = TICK_RATE + TICK_TIMER
 
 		}
+		//
+		// if LATE_TICK_TIMER <= 0 {
+		// 	late_update()
+		//
+		// 	LATE_TICK_TIMER = LATE_TICK_RATE + LATE_TICK_TIMER
+		// }
 
-		if LATE_TICK_TIMER <= 0 {
-			late_update()
-
-			LATE_TICK_TIMER = LATE_TICK_RATE + LATE_TICK_TIMER
-		}
-
-		draw()
+		// draw()
 
 		rl.EndMode2D()
 		if sFPS.show {
