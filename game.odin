@@ -37,7 +37,6 @@ get_tile_xy :: proc(x: int, y: int) -> ^Tile {
 
 	return tile
 }
-
 get_tile_Vec2i :: proc(worldPos: Vec2i) -> ^Tile {
 	x := worldPos.x
 	y := worldPos.y
@@ -86,7 +85,7 @@ update :: proc() {
 	}
 
 
-	camera.zoom += rl.GetMouseWheelMove() * 0.5
+	camera.zoom += rl.GetMouseWheelMove() * 0.1
 }
 
 late_update :: proc() {
