@@ -2,9 +2,12 @@ package main
 
 import "core:fmt"
 import "core:math/rand"
+
 import rl "vendor:raylib"
 
-camera: rl.Camera2D
+Player :: struct {
+	using ent : Entety
+}
 
 Tile :: struct {
 	neighbourMask: int,
@@ -17,10 +20,16 @@ Game_State :: struct {
 	initialized: bool,
 	playerPos:   Vec2i,
 	worldGrid:   [WORLD_GRID.x][WORLD_GRID.y]Tile,
+	camera : rl.Camera2D
 }
 
 g_Game_State := Game_State {
 	initialized = false,
+	camera = rl.Camera2D {
+		offset = rl.Vector2{180, 90},
+		zoom   = 1,
+	}
+
 }
 
 get_tile :: proc {
@@ -45,36 +54,39 @@ get_tile_Vec2i :: proc(worldPos: Vec2i) -> ^Tile {
 }
 
 screen_to_world :: proc(screen_pos: rl.Vector2) -> Vec2i {
-	xPos := f32(screen_pos.x) / TILE_SIZE / camera.zoom
-	yPos := f32(screen_pos.y) / TILE_SIZE / camera.zoom
+	xPos := f32(screen_pos.x) / TILE_SIZE / g_Game_State.camera.zoom
+	yPos := f32(screen_pos.y) / TILE_SIZE / g_Game_State.camera.zoom
 
 	return {int(xPos), int(yPos)}
 }
 
-
-init :: proc() {
-	// rl.SetTargetFPS(60)
-	sFPS.show = true
-	camera = rl.Camera2D {
-		offset = rl.Vector2{180, 90},
-		zoom   = 1,
+player := Player {
+	ent = Entety{
+		pos = {15,15}, 
+		speed = 5,
 	}
-
+}
+camera:= g_Game_State.camera
+init :: proc() {
+	// rl. SetTargetFPS(60)
+	
+	sFPS.show = true
 	rl.InitWindow(1280, 720, "celeste")
 	icon: rl.Image
 	icon = rl.LoadImage("./assets/ico.png")
 	rl.SetWindowIcon(icon)
 	tileTexture = rl.LoadTexture("./assets/tile_texture.png")
+	player.texture = rl.LoadTexture("/assets/tile_texutre.png")
 }
 
 update :: proc() {
-
 	if rl.IsMouseButtonDown(.LEFT) {
 		worldPos := screen_to_world(rl.GetMousePosition())
 		tile := get_tile(worldPos)
 		if tile != nil {
 			tile.isVisible = true
 		}
+		EntetyMove(&player, Vec2f{1,0})
 	}
 	if rl.IsMouseButtonPressed(.RIGHT) {
 		worldPos := screen_to_world(rl.GetMousePosition())
@@ -85,17 +97,18 @@ update :: proc() {
 	}
 
 
-	camera.zoom += rl.GetMouseWheelMove() * 0.1
+	g_Game_State.camera.zoom += rl.GetMouseWheelMove() * 0.1
 }
 
 late_update :: proc() {
 }
+
+// @(optimization_mode="favor_size")
 draw :: proc() {
 	worldPos := screen_to_world(rl.GetMousePosition())
-	// fmt.println(worldPos)
 	rl.DrawRectangleLines(
-		i32(worldPos.x) * TILE_SIZE - i32(camera.offset.x / camera.zoom),
-		i32(worldPos.y) * TILE_SIZE - i32(camera.offset.y / camera.zoom),
+		i32(worldPos.x) * TILE_SIZE - i32(g_Game_State.camera.offset.x / g_Game_State.camera.zoom),
+		i32(worldPos.y) * TILE_SIZE - i32(g_Game_State.camera.offset.y / g_Game_State.camera.zoom),
 		TILE_SIZE,
 		TILE_SIZE,
 		rl.BLUE,
@@ -108,8 +121,8 @@ draw :: proc() {
 			rl.DrawTextureV(
 				tileTexture,
 				{
-					f32(x) * TILE_SIZE - f32(camera.offset.x / camera.zoom),
-					f32(y) * TILE_SIZE - f32(camera.offset.y / camera.zoom),
+					f32(x) * TILE_SIZE - f32(g_Game_State.camera.offset.x / g_Game_State.camera.zoom),
+					f32(y) * TILE_SIZE - f32(g_Game_State.camera.offset.y / g_Game_State.camera.zoom),
 				},
 				rl.WHITE,
 			)
@@ -117,6 +130,8 @@ draw :: proc() {
 
 		}
 	}
+	// rl.DrawRectangle(i32(player.pos.x), i32(player.pos.y),10,10,rl.RED)
+	EntetyDraw(player)
 }
 
 // for &tile in g_Game_State.worldGrid {
