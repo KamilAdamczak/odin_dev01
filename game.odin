@@ -2,11 +2,10 @@ package main
 
 import "core:fmt"
 import "core:math/rand"
-
 import rl "vendor:raylib"
 
 Player :: struct {
-	using ent : Entety
+	using ent: Entety,
 }
 
 Tile :: struct {
@@ -14,95 +13,81 @@ Tile :: struct {
 	isVisible:     bool,
 }
 
-tileTexture: rl.Texture2D
-
 Game_State :: struct {
 	initialized: bool,
 	playerPos:   Vec2i,
 	worldGrid:   [WORLD_GRID.x][WORLD_GRID.y]Tile,
-	camera : rl.Camera2D
+	camera:      rl.Camera2D,
 }
 
 g_Game_State := Game_State {
 	initialized = false,
-	camera = rl.Camera2D {
-		offset = rl.Vector2{180, 90},
-		zoom   = 1,
-	}
-
+	camera = rl.Camera2D{offset = rl.Vector2{120, 80}, zoom = 1},
 }
 
-get_tile :: proc {
-	get_tile_Vec2i,
-	get_tile_xy,
-}
-
-get_tile_xy :: proc(x: int, y: int) -> ^Tile {
-	tile: ^Tile = nil
-
-	if x >= 0 && x <= WORLD_GRID.x && y >= 0 && y <= WORLD_GRID.y {
-		tile = &g_Game_State.worldGrid[x][y]
-	}
-
-	return tile
-}
-get_tile_Vec2i :: proc(worldPos: Vec2i) -> ^Tile {
-	x := worldPos.x
-	y := worldPos.y
-
-	return get_tile(x, y)
-}
-
-screen_to_world :: proc(screen_pos: rl.Vector2) -> Vec2i {
-	xPos := f32(screen_pos.x) / TILE_SIZE / g_Game_State.camera.zoom
-	yPos := f32(screen_pos.y) / TILE_SIZE / g_Game_State.camera.zoom
-
-	return {int(xPos), int(yPos)}
-}
 
 player := Player {
-	ent = Entety{
-		pos = {15,15}, 
-		speed = 5,
-	}
+	ent = Entety{pos = {0, 0}, speed = 5},
 }
-camera:= g_Game_State.camera
+camera := g_Game_State.camera
 init :: proc() {
-	// rl. SetTargetFPS(60)
-	
 	sFPS.show = true
-	rl.InitWindow(1280, 720, "celeste")
+	rl.InitWindow(1280, 720, "vampire")
 	icon: rl.Image
 	icon = rl.LoadImage("./assets/ico.png")
 	rl.SetWindowIcon(icon)
-	tileTexture = rl.LoadTexture("./assets/tile_texture.png")
-	player.texture = rl.LoadTexture("/assets/tile_texutre.png")
+	player.texture = rl.LoadTexture("./assets/tile_texture.png")
 }
 
 update :: proc() {
-	if rl.IsMouseButtonDown(.LEFT) {
-		worldPos := screen_to_world(rl.GetMousePosition())
-		tile := get_tile(worldPos)
-		if tile != nil {
-			tile.isVisible = true
-		}
-		EntetyMove(&player, Vec2f{1,0})
-	}
-	if rl.IsMouseButtonPressed(.RIGHT) {
-		worldPos := screen_to_world(rl.GetMousePosition())
-		tile := get_tile(worldPos)
-		if tile != nil {
-			tile.isVisible = false
-		}
-	}
+	// if rl.IsMouseButtonDown(.LEFT) {
+	// 	worldPos := screen_to_world(rl.GetMousePosition())
+	// 	tile := get_tile(worldPos)
+	// 	if tile != nil {
+	// 		tile.isVisible = true
+	// 	}
+	// }
+	// if rl.IsMouseButtonPressed(.RIGHT) {
+	// 	worldPos := screen_to_world(rl.GetMousePosition())
+	// 	tile := get_tile(worldPos)
+	// 	if tile != nil {
+	// 		tile.isVisible = false
+	// 	}
+	// }
 
+	player_move()
 
-	g_Game_State.camera.zoom += rl.GetMouseWheelMove() * 0.1
+	// g_Game_State.camera.zoom += rl.GetMouseWheelMove() * 0.1
 }
 
 late_update :: proc() {
 }
 
+player_move :: proc() {
+	if rl.IsKeyDown(.A) {
+		player.direction.x = -1
+	}
+	if rl.IsKeyDown(.D) {
+		player.direction.x = 1
+	}
+	if rl.IsKeyDown(.W) {
+		player.direction.y = -1
+	}
+	if rl.IsKeyDown(.S) {
+		player.direction.y = 1
+	}
+
+	if rl.IsKeyReleased(.A) || rl.IsKeyReleased(.D) {
+		player.direction.x = 0
+	}
+
+	if rl.IsKeyReleased(.W) || rl.IsKeyReleased(.S) {
+		player.direction.y = 0
+	}
+	if player.direction != {0, 0} {
+		EntetyMove(&player)
+	}
+}
 // @(optimization_mode="favor_size")
 draw :: proc() {
 	worldPos := screen_to_world(rl.GetMousePosition())
@@ -113,42 +98,5 @@ draw :: proc() {
 		TILE_SIZE,
 		rl.BLUE,
 	)
-	for y in 0 ..< WORLD_HEIGHT {
-		for x in 0 ..< WORLD_WIDTH {
-			if (!g_Game_State.worldGrid[x][y].isVisible) {
-				continue
-			}
-			rl.DrawTextureV(
-				tileTexture,
-				{
-					f32(x) * TILE_SIZE - f32(g_Game_State.camera.offset.x / g_Game_State.camera.zoom),
-					f32(y) * TILE_SIZE - f32(g_Game_State.camera.offset.y / g_Game_State.camera.zoom),
-				},
-				rl.WHITE,
-			)
-
-
-		}
-	}
-	// rl.DrawRectangle(i32(player.pos.x), i32(player.pos.y),10,10,rl.RED)
 	EntetyDraw(player)
 }
-
-// for &tile in g_Game_State.worldGrid {
-// 	fmt.println(tile)
-// 	// for y in 0 ..< WORLD_GRID.y {
-// 	tile := get_tile(0, 0)
-// 	if (!tile.isVisible) {
-// 		continue
-// 	}
-// 	rl.DrawRectangleRec(
-// 		rl.Rectangle {
-// 			f32(0) * TILE_SIZE * 2,
-// 			f32(0) * TILE_SIZE * 2,
-// 			8 * TILE_SIZE * 2,
-// 			8 * TILE_SIZE * 2,
-// 		},
-// 		rl.RED,
-// 	)
-// 	// }
-// }
