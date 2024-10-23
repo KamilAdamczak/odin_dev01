@@ -2,15 +2,17 @@ package main
 
 import "core:fmt"
 import "core:math/rand"
+import "core:math"
+import "core:slice"
 import rl "vendor:raylib"
 
 Player :: struct {
 	using ent: Entety,
 }
 
-Tile :: struct {
-	neighbourMask: int,
-	isVisible:     bool,
+Enemy :: struct {
+	using ent: Entety,
+	color : rl.Color,
 }
 
 Game_State :: struct {
@@ -18,85 +20,123 @@ Game_State :: struct {
 	playerPos:   Vec2i,
 	worldGrid:   [WORLD_GRID.x][WORLD_GRID.y]Tile,
 	camera:      rl.Camera2D,
+	player: Player,
+	enemy : [dynamic] Enemy,
+	enemySpawnTime : f64,
+	assets : map[string]rl.Texture,
 }
 
 g_Game_State := Game_State {
 	initialized = false,
-	camera = rl.Camera2D{offset = rl.Vector2{120, 80}, zoom = 1},
+	camera = rl.Camera2D{offset = {1280/2, 720/2}, zoom = 2},
+	enemySpawnTime = 5,
 }
 
+camera := &g_Game_State.camera
 
-player := Player {
-	ent = Entety{pos = {0, 0}, speed = 5},
-}
-camera := g_Game_State.camera
 init :: proc() {
 	sFPS.show = true
 	rl.InitWindow(1280, 720, "vampire")
+
+	//WINDOW ICON
 	icon: rl.Image
 	icon = rl.LoadImage("./assets/ico.png")
 	rl.SetWindowIcon(icon)
-	player.texture = rl.LoadTexture("./assets/tile_texture.png")
+	
+	//LOAD ASSETS	
+	g_Game_State.assets = {"player" = rl.LoadTexture("./assets/tile_texture.png"), "enemy" = rl.LoadTexture("./assets/tile_texture.png")}
+	//PLAYER
+	g_Game_State.player.ent = Entety{ pos = {1280/2, 720/2}, speed = 2, health = 100} 
+	g_Game_State.player.texture = g_Game_State.assets["player"]
+	//CAMERA
+	camera.target = g_Game_State.player.pos
+	//INIT TIMERS
+	TIMERS["one"] = 0.0
 }
+
 
 update :: proc() {
-	// if rl.IsMouseButtonDown(.LEFT) {
-	// 	worldPos := screen_to_world(rl.GetMousePosition())
-	// 	tile := get_tile(worldPos)
-	// 	if tile != nil {
-	// 		tile.isVisible = true
-	// 	}
-	// }
-	// if rl.IsMouseButtonPressed(.RIGHT) {
-	// 	worldPos := screen_to_world(rl.GetMousePosition())
-	// 	tile := get_tile(worldPos)
-	// 	if tile != nil {
-	// 		tile.isVisible = false
-	// 	}
-	// }
+	TimerRun(&TIMERS["one"],g_Game_State.enemySpawnTime,rl.GetTime(),spawnEnemy)
+	//PLAYER
+	playerMove()
 
-	player_move()
-
-	// g_Game_State.camera.zoom += rl.GetMouseWheelMove() * 0.1
+	//ENEMY
+	for &ent in g_Game_State.enemy {
+		ent.direction = calcDirection(ent.pos, g_Game_State.player.pos)
+		EntetyMove(&ent)
+	}
 }
 
-late_update :: proc() {
+draw :: proc() {
+	{
+		EntetyDraw(g_Game_State.player)
+	}
+
+	
+		for ent in g_Game_State.enemy {
+			EntetyDraw(ent, ent.color)
+		}
+	
+
+}
+		/*
+		ENEMY FUNCTIONS
+		TODO: Move to other file
+*/
+spawnEnemy :: proc() {
+	enemy := Enemy {
+		ent = Entety {
+			pos = g_Game_State.player.pos + {f32(rl.GetRandomValue(-3,3)*20), f32(rl.GetRandomValue(-3,3)*20)},
+			texture = g_Game_State.assets["enemy"],
+			health = 20, 
+			speed = .4,
+		},
+		color = rl.Color {cast(u8)rl.GetRandomValue(0,255),cast(u8)rl.GetRandomValue(0,255), cast(u8)rl.GetRandomValue(0,255), 255}
+	}
+	append(&g_Game_State.enemy, enemy)
 }
 
-player_move :: proc() {
+calcDirection :: proc(pointA : Vec2f, pointB : Vec2f) -> Vec2f {
+	delta_x := pointB.x - pointA.x 
+	delta_y := pointB.y - pointA.y
+
+	length := math.sqrt(delta_x*delta_x + delta_y*delta_y)
+	if length == 0 {
+		return {0,0} 
+	}
+
+	direction_x := delta_x/length
+	direction_y := delta_y/length
+	return {direction_x, direction_y}
+} 
+
+
+/*
+		PLAYER FUNCTIONS - move to other file?
+		TODO: Move to other file
+*/
+playerMove :: proc() {
 	if rl.IsKeyDown(.A) {
-		player.direction.x = -1
+		g_Game_State.player.direction.x = -1
 	}
 	if rl.IsKeyDown(.D) {
-		player.direction.x = 1
+		g_Game_State.player.direction.x = 1
 	}
 	if rl.IsKeyDown(.W) {
-		player.direction.y = -1
+		g_Game_State.player.direction.y = -1
 	}
 	if rl.IsKeyDown(.S) {
-		player.direction.y = 1
+		g_Game_State.player.direction.y = 1
 	}
 
 	if rl.IsKeyReleased(.A) || rl.IsKeyReleased(.D) {
-		player.direction.x = 0
+		g_Game_State.player.direction.x = 0
 	}
 
 	if rl.IsKeyReleased(.W) || rl.IsKeyReleased(.S) {
-		player.direction.y = 0
+		g_Game_State.player.direction.y = 0
 	}
-	if player.direction != {0, 0} {
-		EntetyMove(&player)
+	if g_Game_State.player.direction != {0, 0} {
+		EntetyMove(&g_Game_State.player)
 	}
-}
-// @(optimization_mode="favor_size")
-draw :: proc() {
-	worldPos := screen_to_world(rl.GetMousePosition())
-	rl.DrawRectangleLines(
-		i32(worldPos.x) * TILE_SIZE - i32(g_Game_State.camera.offset.x / g_Game_State.camera.zoom),
-		i32(worldPos.y) * TILE_SIZE - i32(g_Game_State.camera.offset.y / g_Game_State.camera.zoom),
-		TILE_SIZE,
-		TILE_SIZE,
-		rl.BLUE,
-	)
-	EntetyDraw(player)
 }

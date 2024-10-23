@@ -16,7 +16,6 @@ sFPS := SFPS {
 	color = rl.WHITE,
 }
 
-
 main :: proc() {
 	// rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	init()
@@ -25,23 +24,13 @@ main :: proc() {
 		LATE_TICK_TIMER -= rl.GetFrameTime()
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.Color(BACKGROUND_COLOR))
-		rl.BeginMode2D(camera)
+		rl.BeginMode2D(camera^)
 
 		if TICK_TIMER <= 0 {
-
 			update()
 			draw()
 			TICK_TIMER = TICK_RATE + TICK_TIMER
-
 		}
-		//
-		// if LATE_TICK_TIMER <= 0 {
-		// 	late_update()
-		//
-		// 	LATE_TICK_TIMER = LATE_TICK_RATE + LATE_TICK_TIMER
-		// }
-
-		// draw()
 
 		rl.EndMode2D()
 		if sFPS.show {

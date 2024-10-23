@@ -12,22 +12,36 @@ LATE_TICK_TIMER: f32 = LATE_TICK_RATE
 BACKGROUND_COLOR :: [4]u8{75, 42, 25, 0}
 //GLOBAL TYPES
 Vec2i :: [2]int
-Vec2f :: [2]f64
-Vec2f32 :: [2]f32
+Vec2f :: [2]f32
+
+Tile :: struct {
+	neighbourMask: int,
+	isVisible:     bool,
+}
+
+TIMERS := map[string]f64{"one" = 0.0}
 
 //UTILITY PROC
-screen_to_world :: proc(screen_pos: Vec2f32) -> Vec2i {
+
+TimerRun:: proc(timer : ^f64, timeToWait : f64, currentTime :f64, callProcedure : proc()) {	
+	if(timer^ + timeToWait < currentTime) {
+		callProcedure()
+		timer^ = currentTime
+	}
+}
+
+ScreenToWorld :: proc(screen_pos: Vec2f) -> Vec2i {
 	xPos := f32(screen_pos.x) / TILE_SIZE / g_Game_State.camera.zoom
 	yPos := f32(screen_pos.y) / TILE_SIZE / g_Game_State.camera.zoom
 	return {int(xPos), int(yPos)}
 }
 
-get_tile :: proc {
-	get_tile_Vec2i,
-	get_tile_xy,
+getTile :: proc {
+	getTileVec2i,
+	getTileXY,
 }
 
-get_tile_xy :: proc(x: int, y: int) -> ^Tile {
+getTileXY :: proc(x: int, y: int) -> ^Tile {
 	tile: ^Tile = nil
 
 	if x >= 0 && x <= WORLD_GRID.x && y >= 0 && y <= WORLD_GRID.y {
@@ -36,9 +50,9 @@ get_tile_xy :: proc(x: int, y: int) -> ^Tile {
 
 	return tile
 }
-get_tile_Vec2i :: proc(worldPos: Vec2i) -> ^Tile {
+getTileVec2i :: proc(worldPos: Vec2i) -> ^Tile {
 	x := worldPos.x
 	y := worldPos.y
 
-	return get_tile(x, y)
+	return getTile(x, y)
 }
