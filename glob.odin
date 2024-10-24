@@ -1,5 +1,8 @@
 package main
 
+import "core:math"
+import "core:slice"
+
 //GLOBALS VALUES
 WORLD_WIDTH :: 1
 WORLD_HEIGHT :: 1
@@ -19,12 +22,38 @@ Tile :: struct {
 	isVisible:     bool,
 }
 
-TIMERS := map[string]f64{"one" = 0.0}
+TIMERS := map[string]f64 {
+	"one" = 0.0,
+}
 
 //UTILITY PROC
 
-TimerRun:: proc(timer : ^f64, timeToWait : f64, currentTime :f64, callProcedure : proc()) {	
-	if(timer^ + timeToWait < currentTime) {
+
+calcDirection :: proc(pointA: Vec2f, pointB: Vec2f) -> Vec2f {
+	delta_x := pointB.x - pointA.x
+	delta_y := pointB.y - pointA.y
+
+	length := math.sqrt(delta_x * delta_x + delta_y * delta_y)
+	if length == 0 {
+		return {0, 0}
+	}
+
+	direction_x := delta_x / length
+	direction_y := delta_y / length
+	return {direction_x, direction_y}
+}
+
+getIndex :: proc(array: [dynamic]Entety, object: Enemy) -> int {
+	for index in 00 ..< len(array) {
+		if array[index] == object {
+			return index
+		}
+	}
+	return 0
+}
+
+TimerRun :: proc(timer: ^f64, timeToWait: f64, currentTime: f64, callProcedure: proc()) {
+	if (timer^ + timeToWait < currentTime) {
 		callProcedure()
 		timer^ = currentTime
 	}

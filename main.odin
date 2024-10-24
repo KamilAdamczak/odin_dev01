@@ -17,7 +17,7 @@ sFPS := SFPS {
 }
 
 main :: proc() {
-	// rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
+	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	init()
 	for !rl.WindowShouldClose() {
 		TICK_TIMER -= rl.GetFrameTime() //get delta time
@@ -33,6 +33,7 @@ main :: proc() {
 		}
 
 		rl.EndMode2D()
+		drawGui()
 		if sFPS.show {
 			rl.DrawText(
 				rl.TextFormat("%i", rl.GetFPS()),
