@@ -6,37 +6,42 @@ import "core:math/rand"
 import "core:slice"
 import rl "vendor:raylib"
 
-
-
 Player :: struct {
-	using ent : EntetyAtlas,
+	using ent : EntityAtlas,
+	attackSpeed : f64,
 }
 
 Enemy :: struct {
-	using ent: EntetyAtlas,
+	using ent: EntityAtlas,
+}
+
+Projectile :: struct {
+	using ent: EntityAtlas,
+	dmg : int,
 }
 
 Game_State :: struct {
-	initialized:    bool,
-	playerPos:      Vec2i,
 	worldGrid:      [WORLD_GRID.x][WORLD_GRID.y]Tile,
+	
 	camera:         rl.Camera2D,
+	
 	player:         Player,
-	enemy:          [dynamic]EntetyAtlas,
+	
+	enemy:          [dynamic]EntityAtlas,	
 	enemySpawnTime: f64,
+
+	projectiles:	[dynamic]EntityAtlas,
+	
 	assets:         map[string]rl.Texture2D,
-	ase_assets:     map[string][]u8,
 }
 
 g_Game_State := Game_State {
-	initialized = false,
 	camera = rl.Camera2D{offset = {1280 / 2, 720 / 2}, zoom = 2},
-	enemySpawnTime = .1,
+	enemySpawnTime = 2,
 }
+camera := &g_Game_State.camera
 
 spawnCount := 1
-
-camera := &g_Game_State.camera
 
 init :: proc() {
 	sFPS.show = true
@@ -46,6 +51,7 @@ init :: proc() {
 	g_Game_State.assets = {
 		"atlas"  = rl.LoadTexture("./assets/atlas.png")
 	}
+
 	//WINDOW ICON
 	icon: rl.Image
 	icon = rl.LoadImageFromTexture(g_Game_State.assets["atlas"])
@@ -53,18 +59,20 @@ init :: proc() {
 	rl.SetWindowIcon(icon)
 
 	//PLAYER
-	g_Game_State.player.ent = EntetyAtlas {
+	g_Game_State.player.ent = EntityAtlas {
 		pos    = {1280 / 2, 720 / 2},
 		speed  = 2,
 		health = 100,
 		color  = rl.WHITE,
 	}
+	g_Game_State.player.attackSpeed = .1
 
 	g_Game_State.player.texture = Sprite {texture = g_Game_State.assets["atlas"], atlas_pos = {0,2}, texture_scale = {16,16},}
 	//CAMERA
 	camera.target = g_Game_State.player.pos
 	//INIT TIMERS
 	TIMERS["one"] = 0.0
+	TIMERS["two"] = 0.0
 }
 
 
@@ -73,21 +81,66 @@ update :: proc() {
 	//PLAYER
 	playerMove()
 
+	//Projectiles
+	MoveProjectiles()
+	if rl.IsMouseButtonDown(.LEFT) {
+		TimerRun(&TIMERS["two"], 
+		g_Game_State.player.attackSpeed, 
+		rl.GetTime(), 
+		proc() {
+			spawProjectile(
+				g_Game_State.player.ent.pos,
+				calcDirection(
+					g_Game_State.player.pos, 
+					ScreenToWorld(rl.GetMousePosition()))
+				)
+			})
+	}
+
 	//ENEMY
 	for &ent in g_Game_State.enemy {
 		ent.direction = calcDirection(ent.pos, g_Game_State.player.pos)
-		EntetyMove(&ent)
+		EntityMove(&ent)
 	}
 }
 
 draw :: proc() {
-
-	entetySort := EntetySort({g_Game_State.player}, [dynamic][dynamic]EntetyAtlas{g_Game_State.enemy})
-	for ent in entetySort {
-		EntetyDraw(ent, ent.color)
+	EntitySort := EntitySort({g_Game_State.player}, [dynamic][dynamic]EntityAtlas{g_Game_State.enemy, g_Game_State.projectiles})
+	for ent in EntitySort {
+		EntityDraw(ent, ent.color)
 	}
-	delete(entetySort)
+	delete(EntitySort)
 }
+
+
+
+/*
+		PROJECTILES FUNCTIONS
+		TODO: Move to other file
+
+*/
+
+spawProjectile :: proc(position : Vec2f, direction : Vec2f) {
+	projectile := Projectile {
+		ent = EntityAtlas {
+			pos = g_Game_State.player.pos,
+			texture = Sprite {texture = g_Game_State.assets["atlas"], atlas_pos = {0,1}, texture_scale = {16,16},},
+			health = 1,
+			speed = 4,
+			color = rl.WHITE,
+			direction = direction,
+		},
+		dmg = 4
+	}
+	append(&g_Game_State.projectiles, projectile)
+}
+
+MoveProjectiles :: proc() {
+	for &projectile in g_Game_State.projectiles {
+		EntityMove(&projectile)
+	}
+}
+
 /*
 		ENEMY FUNCTIONS
 		TODO: Move to other file
@@ -105,11 +158,11 @@ drawGui :: proc() {
 		30,
 		rl.WHITE,
 	)
-	rl.DrawText(rl.TextFormat("Enteties: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
+	rl.DrawText(rl.TextFormat("Entities: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
 }
 spawnEnemy :: proc() {
 	enemy := Enemy {
-		ent = EntetyAtlas {
+		ent = EntityAtlas {
 			pos = g_Game_State.player.pos +
 			{f32(rl.GetRandomValue(-3, 3) * 20), f32(rl.GetRandomValue(-3, 3) * 20)},
 			texture = Sprite {texture = g_Game_State.assets["atlas"], atlas_pos = {int(rl.GetRandomValue(0,2)),0}, texture_scale = {16,16},},
@@ -154,6 +207,6 @@ playerMove :: proc() {
 		g_Game_State.player.direction.y = 0
 	}
 	if g_Game_State.player.direction != {0, 0} {
-		EntetyMove(&g_Game_State.player)
+		EntityMove(&g_Game_State.player)
 	}
 }

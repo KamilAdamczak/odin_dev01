@@ -43,7 +43,7 @@ calcDirection :: proc(pointA: Vec2f, pointB: Vec2f) -> Vec2f {
 	return {direction_x, direction_y}
 }
 
-getIndex :: proc(array: [dynamic]EntetyAtlas, object: Enemy) -> int {
+getIndex :: proc(array: [dynamic]EntityAtlas, object: Enemy) -> int {
 	for index in 00 ..< len(array) {
 		if array[index] == object {
 			return index
@@ -59,10 +59,15 @@ TimerRun :: proc(timer: ^f64, timeToWait: f64, currentTime: f64, callProcedure: 
 	}
 }
 
-ScreenToWorld :: proc(screen_pos: Vec2f) -> Vec2i {
-	xPos := f32(screen_pos.x) / TILE_SIZE / g_Game_State.camera.zoom
-	yPos := f32(screen_pos.y) / TILE_SIZE / g_Game_State.camera.zoom
-	return {int(xPos), int(yPos)}
+
+// ScreenToWorld :: proc(screen_pos: Vec2f) -> Vec2i {
+// 	xPos := f32(screen_pos.x) / g_Game_State.camera.zoom
+// 	yPos := f32(screen_pos.y) / TILE_SIZE / g_Game_State.camera.zoom
+// 	return {int(xPos), int(yPos)}
+// }
+
+ScreenToWorld :: proc(PosOnScreen:Vec2f) -> Vec2f {
+	return (PosOnScreen+camera.offset)/camera.zoom
 }
 
 getTile :: proc {
