@@ -6,12 +6,14 @@ import "core:math/rand"
 import "core:slice"
 import rl "vendor:raylib"
 
+
+
 Player :: struct {
-	using ent: Entety,
+	using ent : EntetyAtlas,
 }
 
 Enemy :: struct {
-	using ent: Entety,
+	using ent: EntetyAtlas,
 }
 
 Game_State :: struct {
@@ -20,9 +22,9 @@ Game_State :: struct {
 	worldGrid:      [WORLD_GRID.x][WORLD_GRID.y]Tile,
 	camera:         rl.Camera2D,
 	player:         Player,
-	enemy:          [dynamic]Entety,
+	enemy:          [dynamic]EntetyAtlas,
 	enemySpawnTime: f64,
-	assets:         map[string]rl.Texture,
+	assets:         map[string]rl.Texture2D,
 	ase_assets:     map[string][]u8,
 }
 
@@ -39,29 +41,26 @@ camera := &g_Game_State.camera
 init :: proc() {
 	sFPS.show = true
 	rl.InitWindow(1280, 720, "vampire")
-	//WINDOW ICON
-	icon: rl.Image
-	icon = rl.LoadImage("./assets/ico.png")
-	rl.SetWindowIcon(icon)
 
 	//LOAD ASSETS	
-
-	image := rl.LoadImage("./assets/tile_texture.png")
 	g_Game_State.assets = {
-		"player" = rl.LoadTextureFromImage(image),
-		"enemy"  = rl.LoadTexture("./assets/tile_texture.png"),
+		"atlas"  = rl.LoadTexture("./assets/atlas.png")
 	}
-
+	//WINDOW ICON
+	icon: rl.Image
+	icon = rl.LoadImageFromTexture(g_Game_State.assets["atlas"])
+	icon = rl.ImageFromImage(icon, {0.0,32.0,16.0,16.0})
+	rl.SetWindowIcon(icon)
 
 	//PLAYER
-	g_Game_State.player.ent = Entety {
+	g_Game_State.player.ent = EntetyAtlas {
 		pos    = {1280 / 2, 720 / 2},
 		speed  = 2,
 		health = 100,
 		color  = rl.WHITE,
 	}
 
-	g_Game_State.player.texture = g_Game_State.assets["player"]
+	g_Game_State.player.texture = Sprite {texture = g_Game_State.assets["atlas"], atlas_pos = {0,2}, texture_scale = {16,16},}
 	//CAMERA
 	camera.target = g_Game_State.player.pos
 	//INIT TIMERS
@@ -83,7 +82,7 @@ update :: proc() {
 
 draw :: proc() {
 
-	entetySort := EntetySort({g_Game_State.player}, [dynamic][dynamic]Entety{g_Game_State.enemy})
+	entetySort := EntetySort({g_Game_State.player}, [dynamic][dynamic]EntetyAtlas{g_Game_State.enemy})
 	for ent in entetySort {
 		EntetyDraw(ent, ent.color)
 	}
@@ -110,10 +109,10 @@ drawGui :: proc() {
 }
 spawnEnemy :: proc() {
 	enemy := Enemy {
-		ent = Entety {
+		ent = EntetyAtlas {
 			pos = g_Game_State.player.pos +
 			{f32(rl.GetRandomValue(-3, 3) * 20), f32(rl.GetRandomValue(-3, 3) * 20)},
-			texture = g_Game_State.assets["enemy"],
+			texture = Sprite {texture = g_Game_State.assets["atlas"], atlas_pos = {int(rl.GetRandomValue(0,2)),0}, texture_scale = {16,16},},
 			health = 20,
 			speed = f32(rl.GetRandomValue(1, 5)) / 10,
 			color = rl.Color {

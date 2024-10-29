@@ -13,7 +13,22 @@ Entety :: struct {
 	health:    int,
 }
 
-EntetyMove :: proc(body: ^Entety) {
+EntetyAtlas :: struct {
+	pos:       Vec2f,
+	speed:     f32,
+	direction: Vec2f,
+	texture:   Sprite,
+	color:     rl.Color,
+	health:    int,
+}
+
+Sprite :: struct {
+	texture : rl.Texture2D,
+	atlas_pos : Vec2i,
+	texture_scale : Vec2i,
+}
+
+EntetyMove :: proc(body: ^EntetyAtlas) {
 	body.pos +=
 		Vec2f{f32(body.direction.x), f32(body.direction.y)} *
 		body.speed *
@@ -25,18 +40,20 @@ EntetyDraw :: proc {
 	EntetyDrawTint,
 }
 
-EntetyDrawNormal :: proc(ent: Entety) {
-	rl.DrawTextureEx(ent.texture, ent.pos, 0.0, camera.zoom, rl.WHITE)
+EntetyDrawNormal :: proc(ent: EntetyAtlas) {
+	// rl.DrawTextureEx(ent.texture, ent.pos, 0.0, camera.zoom, rl.WHITE)
+	rl.DrawTexturePro(ent.texture.texture, {f32(ent.texture.atlas_pos.x)*16, f32(ent.texture.atlas_pos.y)*16, f32(ent.texture.texture_scale.x), f32(ent.texture.texture_scale.y)}, {f32(ent.pos.x), f32(ent.pos.y), 16.0, 16.0}, {0,0}, 0.0,rl.WHITE)
 }
 
-EntetyDrawTint :: proc(ent: Entety, tint: rl.Color) {
-	rl.DrawTextureEx(ent.texture, ent.pos, 0.0, camera.zoom, tint)
+EntetyDrawTint :: proc(ent: EntetyAtlas, tint: rl.Color) {
+	rl.DrawTexturePro(ent.texture.texture, {f32(ent.texture.atlas_pos.x)*16, f32(ent.texture.atlas_pos.y)*16, f32(ent.texture.texture_scale.x), f32(ent.texture.texture_scale.y)}, {f32(ent.pos.x), f32(ent.pos.y), 16.0, 16.0}, {0,0}, 0.0,ent.color)
+	// rl.DrawTextureEx(ent.texture, ent.pos, 0.0, camera.zoom, tint)
 }
 
 EntetySortList :: proc(
-	arrayOfEnteties: [dynamic]Entety,
-	arrayOfArrays: [dynamic][dynamic]Entety,
-) -> [dynamic]Entety {
+	arrayOfEnteties: [dynamic]EntetyAtlas,
+	arrayOfArrays: [dynamic][dynamic]EntetyAtlas,
+) -> [dynamic]EntetyAtlas {
 	arrayOfEnteties := arrayOfEnteties
 	for array in arrayOfArrays {
 		append(&arrayOfEnteties, ..array[:])
@@ -44,8 +61,8 @@ EntetySortList :: proc(
 	return EntetySortArray(arrayOfEnteties)
 }
 
-EntetySortArray :: proc(arrayOfEnteties: [dynamic]Entety) -> [dynamic]Entety {
-	slice.sort_by(arrayOfEnteties[:], proc(entA: Entety, entB: Entety) -> bool {
+EntetySortArray :: proc(arrayOfEnteties: [dynamic]EntetyAtlas) -> [dynamic]EntetyAtlas {
+	slice.sort_by(arrayOfEnteties[:], proc(entA: EntetyAtlas, entB: EntetyAtlas) -> bool {
 		return entA.pos.y < entB.pos.y
 	})
 	return arrayOfEnteties

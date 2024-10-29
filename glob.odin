@@ -43,7 +43,7 @@ calcDirection :: proc(pointA: Vec2f, pointB: Vec2f) -> Vec2f {
 	return {direction_x, direction_y}
 }
 
-getIndex :: proc(array: [dynamic]Entety, object: Enemy) -> int {
+getIndex :: proc(array: [dynamic]EntetyAtlas, object: Enemy) -> int {
 	for index in 00 ..< len(array) {
 		if array[index] == object {
 			return index
