@@ -1,5 +1,6 @@
 package main
 
+import "core:fmt"
 import rl "vendor:raylib"
 
 SFPS :: struct {
@@ -17,7 +18,7 @@ sFPS := SFPS {
 }
 
 main :: proc() {
-	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
+	// rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	init()
 	for !rl.WindowShouldClose() {
 		TICK_TIMER -= rl.GetFrameTime() //get delta time
@@ -44,6 +45,14 @@ main :: proc() {
 			)
 		}
 		rl.EndDrawing()
+		free_all(context.temp_allocator)
+	}
+
+	/*high risk! maybe move to main game loop 
+			TODO: DO SOMETHING WITH THIS SHIT!
+	*/
+	for asset in g_Game_State.assets {
+		rl.UnloadTexture(g_Game_State.assets[asset])
 	}
 
 	rl.CloseWindow()

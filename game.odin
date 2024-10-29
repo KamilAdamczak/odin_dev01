@@ -23,6 +23,7 @@ Game_State :: struct {
 	enemy:          [dynamic]Entety,
 	enemySpawnTime: f64,
 	assets:         map[string]rl.Texture,
+	ase_assets:     map[string][]u8,
 }
 
 g_Game_State := Game_State {
@@ -38,17 +39,20 @@ camera := &g_Game_State.camera
 init :: proc() {
 	sFPS.show = true
 	rl.InitWindow(1280, 720, "vampire")
-
 	//WINDOW ICON
 	icon: rl.Image
 	icon = rl.LoadImage("./assets/ico.png")
 	rl.SetWindowIcon(icon)
 
 	//LOAD ASSETS	
+
+	image := rl.LoadImage("./assets/tile_texture.png")
 	g_Game_State.assets = {
-		"player" = rl.LoadTexture("./assets/tile_texture.png"),
+		"player" = rl.LoadTextureFromImage(image),
 		"enemy"  = rl.LoadTexture("./assets/tile_texture.png"),
 	}
+
+
 	//PLAYER
 	g_Game_State.player.ent = Entety {
 		pos    = {1280 / 2, 720 / 2},
