@@ -19,6 +19,65 @@ Collider :: struct {
 	size: Vec2f,
 }
 
+
+getColliderRect :: proc(ent : EntityAtlas) -> rl.Rectangle {
+	rect := rl.Rectangle{
+		f32(ent.pos.x) - f32(ent.texture.texture_scale.x)/2,
+		f32(ent.pos.y) - f32(ent.texture.texture_scale.y)/2,
+		ent.collider.size.x,
+		ent.collider.size.y,
+	}
+	return rect
+}
+
+getColliderCircle :: proc(ent : EntityAtlas) -> Circle {
+	circ := Circle {
+		rl.Vector2{ent.pos.x, ent.pos.y},
+		ent.collider.size.x,
+	}
+	return circ
+}
+
+ checkCollision:: proc(entA: EntityAtlas, entB: EntityAtlas) -> bool {
+	switch entA.collider.type {
+		case .OVAL:
+			switch entB.collider.type {
+				case .OVAL:
+					return rl.CheckCollisionCircles(
+						getColliderCircle(entA).center,
+						getColliderCircle(entA).r,
+						getColliderCircle(entB).center,
+						getColliderCircle(entB).r)
+				case .RECT, .BOX:
+					return rl.CheckCollisionCircleRec(
+						getColliderCircle(entA).center,
+						getColliderCircle(entA).r,
+						getColliderRect(entB)
+					)
+			}
+		case .RECT, .BOX:
+			switch entB.collider.type {
+				case .OVAL:
+					return rl.CheckCollisionCircleRec(
+						getColliderCircle(entB).center,
+						getColliderCircle(entB).r,
+						getColliderRect(entA)
+					)
+				case .RECT, .BOX:
+					return rl.CheckCollisionRecs(
+						getColliderRect(entA),
+						getColliderRect(entB)
+					)
+			}
+	}
+	return false
+}
+
+Circle :: struct {
+	center : rl.Vector2,
+	r : f32,
+}
+
 SetColliderEnt :: proc(type : ColliderType, ent : EntityAtlas) -> Collider {
 	col : Collider
 	col.type = type
@@ -40,7 +99,6 @@ SetColliderSize :: proc(type : ColliderType, size : Vec2f) -> Collider {
 	}
 	return col
 }
-
 SetCollider :: proc {
 	SetColliderEnt,
 	SetColliderSize,
@@ -73,6 +131,14 @@ EntityMove :: proc(body: ^EntityAtlas) {
 		Vec2f{f32(body.direction.x), f32(body.direction.y)} *
 		body.speed *
 		f32(rl.GetFrameTime() * 100)
+}
+EntityFutureMove :: proc(body: EntityAtlas) -> EntityAtlas {
+	body := body
+	body.pos +=
+		Vec2f{f32(body.direction.x), f32(body.direction.y)} *
+		body.speed *
+		f32(rl.GetFrameTime() * 100)
+	return body
 }
 
 EntityDraw :: proc {

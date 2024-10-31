@@ -46,7 +46,7 @@ spawnCount := 1
 init :: proc() {
 	sFPS.show = true
 	rl.InitWindow(1280, 720, "vampire")
-	DRAW_COLLIDERS = true
+	// DRAW_COLLIDERS = true
 	//LOAD ASSETS	
 	g_Game_State.assets = {
 		"atlas"  = rl.LoadTexture("./assets/atlas.png")
@@ -98,14 +98,35 @@ update :: proc() {
 	}
 
 	//ENEMY
-	for &ent in g_Game_State.enemy {
+	for &ent, index in g_Game_State.enemy {
 		ent.direction = calcDirection(ent.pos, g_Game_State.player.pos)
-		EntityMove(&ent)
+		collision := false
+		for entB in g_Game_State.enemy {
+			if ent == entB || collision {
+				continue
+			}
+			newPosEntA := EntityFutureMove(ent)
+			if checkCollision(newPosEntA, entB) {
+				collision = true
+			}
+		}
+		if !collision {
+			EntityMove(&ent)
+		}
+		
 	}
 }
 
 draw :: proc() {
 	EntitySort := EntitySort({g_Game_State.player}, [dynamic][dynamic]EntityAtlas{g_Game_State.enemy, g_Game_State.projectiles})
+	
+	for ent in EntitySort {
+		shadow := ent
+		shadow.pos.x -= 2
+		shadow.pos.y -= 2
+		EntityDraw(shadow, rl.Color {0,0,0,100})
+	}
+
 	for ent in EntitySort {
 		EntityDraw(ent, ent.color)
 	}
@@ -177,7 +198,7 @@ spawnEnemy :: proc() {
 			},
 		},
 	}
-	enemy.collider = SetCollider(.OVAL, enemy) 
+	enemy.collider = SetCollider(.OVAL, Vec2f{6,0}) 
 	append(&g_Game_State.enemy, enemy)
 	spawnCount += 1
 }
