@@ -37,7 +37,7 @@ Game_State :: struct {
 
 g_Game_State := Game_State {
 	camera = rl.Camera2D{offset = {1280 / 2, 720 / 2}, zoom = 2},
-	enemySpawnTime = 2,
+	enemySpawnTime = .1,
 }
 camera := &g_Game_State.camera
 
@@ -46,7 +46,7 @@ spawnCount := 1
 init :: proc() {
 	sFPS.show = true
 	rl.InitWindow(1280, 720, "vampire")
-	// DRAW_COLLIDERS = true
+	DRAW_COLLIDERS = true
 	//LOAD ASSETS	
 	g_Game_State.assets = {
 		"atlas"  = rl.LoadTexture("./assets/atlas.png")
@@ -123,8 +123,8 @@ draw :: proc() {
 	for ent in EntitySort {
 		shadow := ent
 		shadow.pos.x -= 2
-		shadow.pos.y -= 2
-		EntityDraw(shadow, rl.Color {0,0,0,100})
+		shadow.pos.y -= 3
+		EntityDraw(shadow, rl.Color {0,0,0,80})
 	}
 
 	for ent in EntitySort {
