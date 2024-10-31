@@ -11,6 +11,45 @@ Entity :: struct {
 	texture:   rl.Texture2D,
 	color:     rl.Color,
 	health:    int,
+	collider : Collider,
+}
+
+Collider :: struct {
+	type: ColliderType,
+	size: Vec2f,
+}
+
+SetColliderEnt :: proc(type : ColliderType, ent : EntityAtlas) -> Collider {
+	col : Collider
+	col.type = type
+	switch type {
+		case .BOX: col.size = {f32(ent.texture.texture_scale.x), f32(ent.texture.texture_scale.x)}
+		case .RECT: col.size = {f32(ent.texture.texture_scale.x), f32(ent.texture.texture_scale.x)}
+		case .OVAL: col.size = {f32(ent.texture.texture_scale.x)/2,0}
+	}
+	return col
+}
+
+SetColliderSize :: proc(type : ColliderType, size : Vec2f) -> Collider {
+	col : Collider
+	col.type = type
+	switch type {
+		case .BOX: col.size = size
+		case .RECT: col.size = size
+		case .OVAL: col.size = size
+	}
+	return col
+}
+
+SetCollider :: proc {
+	SetColliderEnt,
+	SetColliderSize,
+}
+
+ColliderType :: enum {
+	BOX,
+	RECT,
+	OVAL,
 }
 
 EntityAtlas :: struct {
@@ -20,6 +59,7 @@ EntityAtlas :: struct {
 	texture:   Sprite,
 	color:     rl.Color,
 	health:    int,
+	collider: Collider,
 }
 
 Sprite :: struct {
@@ -60,6 +100,15 @@ EntityDrawNormal :: proc(ent: EntityAtlas) {
 }
 
 EntityDrawTint :: proc(ent: EntityAtlas, tint: rl.Color) {
+	if DRAW_COLLIDERS {
+		switch ent.collider.type {
+			case .BOX: rl.DrawRectangleLines(i32(ent.pos.x) - i32(ent.texture.texture_scale.x)/2, i32(ent.pos.y)  - i32(ent.texture.texture_scale.y)/2, i32(ent.collider.size.x), i32(ent.collider.size.y), tint)
+			case .OVAL: rl.DrawCircleLines(i32(ent.pos.x) , i32(ent.pos.y) , ent.collider.size.x, tint)
+			case .RECT: rl.DrawRectangleLines(i32(ent.pos.x) - i32(ent.texture.texture_scale.x)/2, i32(ent.pos.y)  - i32(ent.texture.texture_scale.y)/2, i32(ent.collider.size.x), i32(ent.collider.size.y), tint)
+		}
+		
+	}
+	
 	rl.DrawTexturePro(
 		ent.texture.texture,
 		{

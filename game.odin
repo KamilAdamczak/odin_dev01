@@ -46,7 +46,7 @@ spawnCount := 1
 init :: proc() {
 	sFPS.show = true
 	rl.InitWindow(1280, 720, "vampire")
-
+	DRAW_COLLIDERS = true
 	//LOAD ASSETS	
 	g_Game_State.assets = {
 		"atlas"  = rl.LoadTexture("./assets/atlas.png")
@@ -66,8 +66,8 @@ init :: proc() {
 		color  = rl.WHITE,
 	}
 	g_Game_State.player.attackSpeed = .1
-
 	g_Game_State.player.texture = Sprite {texture = g_Game_State.assets["atlas"], atlas_pos = {0,2}, texture_scale = {16,16},}
+	g_Game_State.player.collider = SetCollider(.OVAL, Vec2f{6,0}) 
 	//CAMERA
 	camera.target = g_Game_State.player.pos
 	//INIT TIMERS
@@ -132,6 +132,7 @@ spawProjectile :: proc(position : Vec2f, direction : Vec2f) {
 		},
 		dmg = 4
 	}
+	projectile.collider = SetCollider(.OVAL, Vec2f{4.0, 0.0})
 	append(&g_Game_State.projectiles, projectile)
 }
 
@@ -176,6 +177,7 @@ spawnEnemy :: proc() {
 			},
 		},
 	}
+	enemy.collider = SetCollider(.OVAL, enemy) 
 	append(&g_Game_State.enemy, enemy)
 	spawnCount += 1
 }

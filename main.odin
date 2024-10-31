@@ -17,6 +17,8 @@ sFPS := SFPS {
 	color = rl.WHITE,
 }
 
+DRAW_COLLIDERS := false
+
 main :: proc() {
 	// rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	init()
