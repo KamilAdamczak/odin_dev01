@@ -37,7 +37,7 @@ Game_State :: struct {
 
 g_Game_State := Game_State {
 	camera = rl.Camera2D{offset = {1280 / 2, 720 / 2}, zoom = 2},
-	enemySpawnTime = .1,
+	enemySpawnTime = 2,
 }
 camera := &g_Game_State.camera
 
@@ -46,7 +46,7 @@ spawnCount := 1
 init :: proc() {
 	sFPS.show = true
 	rl.InitWindow(1280, 720, "vampire")
-	DRAW_COLLIDERS = true
+	// DRAW_COLLIDERS = true
 	//LOAD ASSETS	
 	g_Game_State.assets = {
 		"atlas"  = rl.LoadTexture("./assets/atlas.png")
@@ -82,7 +82,7 @@ update :: proc() {
 	playerMove()
 
 	//Projectiles
-	MoveProjectiles()
+	UpdateProjectiles()
 	if rl.IsMouseButtonDown(.LEFT) {
 		TimerRun(&TIMERS["two"], 
 		g_Game_State.player.attackSpeed, 
@@ -99,6 +99,11 @@ update :: proc() {
 
 	//ENEMY
 	for &ent, index in g_Game_State.enemy {
+		if ent.health <= 0 {
+			ordered_remove(&g_Game_State.enemy, index)
+			continue
+		}
+		// fmt.println(index)
 		ent.direction = calcDirection(ent.pos, g_Game_State.player.pos)
 		collision := false
 		for entB in g_Game_State.enemy {
@@ -113,7 +118,13 @@ update :: proc() {
 		if !collision {
 			EntityMove(&ent)
 		}
-		
+
+		for &projectile in g_Game_State.projectiles {
+			if checkCollision(ent, projectile) {
+				projectile.health -=1
+				ent.health -= 4
+			}
+		}
 	}
 }
 
@@ -157,8 +168,12 @@ spawProjectile :: proc(position : Vec2f, direction : Vec2f) {
 	append(&g_Game_State.projectiles, projectile)
 }
 
-MoveProjectiles :: proc() {
-	for &projectile in g_Game_State.projectiles {
+UpdateProjectiles :: proc() {
+	for &projectile, index in g_Game_State.projectiles {
+		if projectile.health <= 0 {
+			ordered_remove(&g_Game_State.projectiles, index)
+			continue
+		}
 		EntityMove(&projectile)
 	}
 }

@@ -20,7 +20,7 @@ sFPS := SFPS {
 DRAW_COLLIDERS := false
 
 main :: proc() {
-	// rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
+	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	init()
 	for !rl.WindowShouldClose() {
 		TICK_TIMER -= rl.GetFrameTime() //get delta time
