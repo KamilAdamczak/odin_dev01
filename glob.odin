@@ -23,13 +23,19 @@ Tile :: struct {
 	isVisible:     bool,
 }
 
+LOOP_STATE_VALUES :: enum {
+	INIT,
+	UPDATE,
+	DRAW_SHADOWS,
+	DRAW_SPRITES,
+	DRAW_GUI,
+}
+
 TIMERS := map[string]f64 {
 	"one" = 0.0,
 }
 
 //UTILITY PROC
-
-
 calcDirection :: proc(pointA: Vec2f, pointB: Vec2f) -> Vec2f {
 	delta_x := pointB.x - pointA.x
 	delta_y := pointB.y - pointA.y
@@ -53,13 +59,12 @@ getIndex :: proc(array: [dynamic]EntityAtlas, object: Enemy) -> int {
 	return 0
 }
 
-TimerRun :: proc(timer: ^f64, timeToWait: f64, currentTime: f64, callProcedure: proc()) {
+timerRun :: proc(timer: ^f64, timeToWait: f64, currentTime: f64, callProcedure: proc()) {
 	if (timer^ + timeToWait < currentTime) {
 		callProcedure()
 		timer^ = currentTime
 	}
 }
-
 
 // ScreenToWorld :: proc(screen_pos: Vec2f) -> Vec2i {
 // 	xPos := f32(screen_pos.x) / g_Game_State.camera.zoom
@@ -67,8 +72,8 @@ TimerRun :: proc(timer: ^f64, timeToWait: f64, currentTime: f64, callProcedure: 
 // 	return {int(xPos), int(yPos)}
 // }
 
-ScreenToWorld :: proc(PosOnScreen:Vec2f) -> Vec2f {
-	return (PosOnScreen+camera.offset)/camera.zoom
+screenToWorld :: proc(PosOnScreen: Vec2f) -> Vec2f {
+	return (PosOnScreen + camera.offset) / camera.zoom
 }
 
 getTile :: proc {

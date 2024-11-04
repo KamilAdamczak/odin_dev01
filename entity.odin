@@ -11,7 +11,7 @@ Entity :: struct {
 	texture:   rl.Texture2D,
 	color:     rl.Color,
 	health:    int,
-	collider : Collider,
+	collider:  Collider,
 }
 
 Collider :: struct {
@@ -20,82 +20,83 @@ Collider :: struct {
 }
 
 
-getColliderRect :: proc(ent : EntityAtlas) -> rl.Rectangle {
-	rect := rl.Rectangle{
-		f32(ent.pos.x) - f32(ent.texture.texture_scale.x)/2,
-		f32(ent.pos.y) - f32(ent.texture.texture_scale.y)/2,
+getColliderRect :: proc(ent: EntityAtlas) -> rl.Rectangle {
+	rect := rl.Rectangle {
+		f32(ent.pos.x) - f32(ent.texture.texture_scale.x) / 2,
+		f32(ent.pos.y) - f32(ent.texture.texture_scale.y) / 2,
 		ent.collider.size.x,
 		ent.collider.size.y,
 	}
 	return rect
 }
 
-getColliderCircle :: proc(ent : EntityAtlas) -> Circle {
-	circ := Circle {
-		rl.Vector2{ent.pos.x, ent.pos.y},
-		ent.collider.size.x,
-	}
+getColliderCircle :: proc(ent: EntityAtlas) -> Circle {
+	circ := Circle{rl.Vector2{ent.pos.x, ent.pos.y}, ent.collider.size.x}
 	return circ
 }
 
- checkCollision:: proc(entA: EntityAtlas, entB: EntityAtlas) -> bool {
+checkCollision :: proc(entA: EntityAtlas, entB: EntityAtlas) -> bool {
 	switch entA.collider.type {
+	case .OVAL:
+		switch entB.collider.type {
 		case .OVAL:
-			switch entB.collider.type {
-				case .OVAL:
-					return rl.CheckCollisionCircles(
-						getColliderCircle(entA).center,
-						getColliderCircle(entA).r,
-						getColliderCircle(entB).center,
-						getColliderCircle(entB).r)
-				case .RECT, .BOX:
-					return rl.CheckCollisionCircleRec(
-						getColliderCircle(entA).center,
-						getColliderCircle(entA).r,
-						getColliderRect(entB)
-					)
-			}
+			return rl.CheckCollisionCircles(
+				getColliderCircle(entA).center,
+				getColliderCircle(entA).r,
+				getColliderCircle(entB).center,
+				getColliderCircle(entB).r,
+			)
 		case .RECT, .BOX:
-			switch entB.collider.type {
-				case .OVAL:
-					return rl.CheckCollisionCircleRec(
-						getColliderCircle(entB).center,
-						getColliderCircle(entB).r,
-						getColliderRect(entA)
-					)
-				case .RECT, .BOX:
-					return rl.CheckCollisionRecs(
-						getColliderRect(entA),
-						getColliderRect(entB)
-					)
-			}
+			return rl.CheckCollisionCircleRec(
+				getColliderCircle(entA).center,
+				getColliderCircle(entA).r,
+				getColliderRect(entB),
+			)
+		}
+	case .RECT, .BOX:
+		switch entB.collider.type {
+		case .OVAL:
+			return rl.CheckCollisionCircleRec(
+				getColliderCircle(entB).center,
+				getColliderCircle(entB).r,
+				getColliderRect(entA),
+			)
+		case .RECT, .BOX:
+			return rl.CheckCollisionRecs(getColliderRect(entA), getColliderRect(entB))
+		}
 	}
 	return false
 }
 
 Circle :: struct {
-	center : rl.Vector2,
-	r : f32,
+	center: rl.Vector2,
+	r:      f32,
 }
 
-SetColliderEnt :: proc(type : ColliderType, ent : EntityAtlas) -> Collider {
-	col : Collider
+SetColliderEnt :: proc(type: ColliderType, ent: EntityAtlas) -> Collider {
+	col: Collider
 	col.type = type
 	switch type {
-		case .BOX: col.size = {f32(ent.texture.texture_scale.x), f32(ent.texture.texture_scale.x)}
-		case .RECT: col.size = {f32(ent.texture.texture_scale.x), f32(ent.texture.texture_scale.x)}
-		case .OVAL: col.size = {f32(ent.texture.texture_scale.x)/2,0}
+	case .BOX:
+		col.size = {f32(ent.texture.texture_scale.x), f32(ent.texture.texture_scale.x)}
+	case .RECT:
+		col.size = {f32(ent.texture.texture_scale.x), f32(ent.texture.texture_scale.x)}
+	case .OVAL:
+		col.size = {f32(ent.texture.texture_scale.x) / 2, 0}
 	}
 	return col
 }
 
-SetColliderSize :: proc(type : ColliderType, size : Vec2f) -> Collider {
-	col : Collider
+SetColliderSize :: proc(type: ColliderType, size: Vec2f) -> Collider {
+	col: Collider
 	col.type = type
 	switch type {
-		case .BOX: col.size = size
-		case .RECT: col.size = size
-		case .OVAL: col.size = size
+	case .BOX:
+		col.size = size
+	case .RECT:
+		col.size = size
+	case .OVAL:
+		col.size = size
 	}
 	return col
 }
@@ -117,13 +118,14 @@ EntityAtlas :: struct {
 	texture:   Sprite,
 	color:     rl.Color,
 	health:    int,
-	collider: Collider,
+	collider:  Collider,
+	id:        int,
 }
 
 Sprite :: struct {
-	texture : rl.Texture2D,
-	atlas_pos : Vec2i,
-	texture_scale : Vec2i,
+	texture:       rl.Texture2D,
+	atlas_pos:     Vec2i,
+	texture_scale: Vec2i,
 }
 
 EntityMove :: proc(body: ^EntityAtlas) {
@@ -151,45 +153,56 @@ EntityDrawNormal :: proc(ent: EntityAtlas) {
 	rl.DrawTexturePro(
 		ent.texture.texture,
 		{
-			f32(ent.texture.atlas_pos.x)*16,
-			f32(ent.texture.atlas_pos.y)*16, 
-			f32(ent.texture.texture_scale.x), 
-			f32(ent.texture.texture_scale.y)},
-		{
-			f32(ent.pos.x),
-			f32(ent.pos.y),
-			16.0,
-			16.0},
-		{8,8},
+			f32(ent.texture.atlas_pos.x) * 16,
+			f32(ent.texture.atlas_pos.y) * 16,
+			f32(ent.texture.texture_scale.x),
+			f32(ent.texture.texture_scale.y),
+		},
+		{f32(ent.pos.x), f32(ent.pos.y), 16.0, 16.0},
+		{8, 8},
 		0.0,
-		rl.WHITE)
+		rl.WHITE,
+	)
 }
 
 EntityDrawTint :: proc(ent: EntityAtlas, tint: rl.Color) {
-	if DRAW_COLLIDERS {
+	if DRAW_COLLIDERS && LOOP_STATE == .DRAW_SPRITES {
 		switch ent.collider.type {
-			case .BOX: rl.DrawRectangleLines(i32(ent.pos.x) - i32(ent.texture.texture_scale.x)/2, i32(ent.pos.y)  - i32(ent.texture.texture_scale.y)/2, i32(ent.collider.size.x), i32(ent.collider.size.y), tint)
-			case .OVAL: rl.DrawCircleLines(i32(ent.pos.x) , i32(ent.pos.y) , ent.collider.size.x, tint)
-			case .RECT: rl.DrawRectangleLines(i32(ent.pos.x) - i32(ent.texture.texture_scale.x)/2, i32(ent.pos.y)  - i32(ent.texture.texture_scale.y)/2, i32(ent.collider.size.x), i32(ent.collider.size.y), tint)
+		case .BOX:
+			rl.DrawRectangleLines(
+				i32(ent.pos.x) - i32(ent.texture.texture_scale.x) / 2,
+				i32(ent.pos.y) - i32(ent.texture.texture_scale.y) / 2,
+				i32(ent.collider.size.x),
+				i32(ent.collider.size.y),
+				tint,
+			)
+		case .OVAL:
+			rl.DrawCircleLines(i32(ent.pos.x), i32(ent.pos.y), ent.collider.size.x, tint)
+		case .RECT:
+			rl.DrawRectangleLines(
+				i32(ent.pos.x) - i32(ent.texture.texture_scale.x) / 2,
+				i32(ent.pos.y) - i32(ent.texture.texture_scale.y) / 2,
+				i32(ent.collider.size.x),
+				i32(ent.collider.size.y),
+				tint,
+			)
 		}
-		
+
 	}
-	
+
 	rl.DrawTexturePro(
 		ent.texture.texture,
 		{
-			f32(ent.texture.atlas_pos.x)*16,
-			f32(ent.texture.atlas_pos.y)*16,
-			ent.direction.x >= 0 ? f32(ent.texture.texture_scale.x) : -f32(ent.texture.texture_scale.x), 
-			f32(ent.texture.texture_scale.y)},
-		{
-			f32(ent.pos.x),
-			f32(ent.pos.y),
-			16.0,
-			16.0},
-		{8,8},
+			f32(ent.texture.atlas_pos.x) * 16,
+			f32(ent.texture.atlas_pos.y) * 16,
+			ent.direction.x >= 0 ? f32(ent.texture.texture_scale.x) : -f32(ent.texture.texture_scale.x),
+			f32(ent.texture.texture_scale.y),
+		},
+		{f32(ent.pos.x), f32(ent.pos.y), 16.0, 16.0},
+		{8, 8},
 		0.0,
-		tint)
+		tint,
+	)
 	// rl.DrawTextureEx(ent.texture, ent.pos, 0.0, camera.zoom, tint)
 }
 

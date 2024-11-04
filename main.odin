@@ -18,7 +18,7 @@ sFPS := SFPS {
 }
 
 DRAW_COLLIDERS := false
-
+LOOP_STATE: LOOP_STATE_VALUES = .INIT
 main :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	init()
@@ -30,12 +30,14 @@ main :: proc() {
 		rl.BeginMode2D(camera^)
 
 		if TICK_TIMER <= 0 {
+			LOOP_STATE = .UPDATE
 			update()
 			draw()
 			TICK_TIMER = TICK_RATE + TICK_TIMER
 		}
 
 		rl.EndMode2D()
+		LOOP_STATE = .DRAW_GUI
 		drawGui()
 		if sFPS.show {
 			rl.DrawText(
