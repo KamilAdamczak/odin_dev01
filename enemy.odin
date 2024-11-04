@@ -17,7 +17,7 @@ updateEnemy :: proc() {
 		for &projectile in g_Game_State.projectiles {
 			if checkCollision(ent, projectile) {
 				projectile.health -= 1
-				ent.health -= 20
+				ent.health -= 5
 			}
 		}
 
@@ -70,10 +70,10 @@ spawnEnemy :: proc() {
 				cast(u8)rl.GetRandomValue(0, 255),
 				255,
 			},
-			id = spawnCount,
+			id = int(spawnCount),
 		},
 	}
-	enemy.collider = SetCollider(.OVAL, Vec2f{6, 0})
+	enemy.collider = SetCollider(.OVAL, Vec2f{3, 0})
 	append(&g_Game_State.enemy, enemy)
 	spawnCount += 1
 }

@@ -18,7 +18,7 @@ Game_State :: struct {
 
 g_Game_State := Game_State {
 	camera = rl.Camera2D{offset = {1280 / 2, 720 / 2}, zoom = 2},
-	enemySpawnTime = .5,
+	enemySpawnTime = 1,
 }
 
 camera := &g_Game_State.camera
@@ -28,7 +28,7 @@ spawnCount := 1
 DRAW_SHADOWS := true
 
 init :: proc() {
-	sFPS.show = true
+	// sFPS.show = true
 	rl.InitWindow(1280, 720, "vampire")
 
 	//LOAD ASSETS	
@@ -50,7 +50,7 @@ init :: proc() {
 		color  = rl.WHITE,
 	}
 
-	g_Game_State.player.attackSpeed = .5
+	g_Game_State.player.attackSpeed = 1.5
 
 	g_Game_State.player.texture = Sprite {
 		texture       = g_Game_State.assets["atlas"],
@@ -70,6 +70,7 @@ init :: proc() {
 
 closesEnemy: EntityAtlas
 update :: proc() {
+	camera.target = g_Game_State.player.pos
 	timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
 
 	//PLAYER
@@ -81,10 +82,19 @@ update :: proc() {
 		closesEnemy = g_Game_State.enemy[0]
 		timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(), proc() {
 			for ent in g_Game_State.enemy {
-				if abs(ent.pos.x - g_Game_State.player.pos.x) <
-					   abs(closesEnemy.pos.x - g_Game_State.player.pos.x) ||
-				   abs(ent.pos.y - g_Game_State.player.pos.y) <
-					   abs(closesEnemy.pos.y - g_Game_State.player.pos.y) {
+				new_cc := math.sqrt(
+					(abs(ent.pos.x - g_Game_State.player.pos.x) *
+						abs(ent.pos.x - g_Game_State.player.pos.x)) +
+					(abs(ent.pos.y - g_Game_State.player.pos.y) *
+							abs(ent.pos.y - g_Game_State.player.pos.y)),
+				)
+				old_cc := math.sqrt(
+					(abs(closesEnemy.pos.x - g_Game_State.player.pos.x) *
+						abs(closesEnemy.pos.x - g_Game_State.player.pos.x)) +
+					(abs(closesEnemy.pos.y - g_Game_State.player.pos.y) *
+							abs(closesEnemy.pos.y - g_Game_State.player.pos.y)),
+				)
+				if new_cc < old_cc {
 					closesEnemy = ent
 				}
 			}
@@ -94,7 +104,6 @@ update :: proc() {
 			)
 		})
 	}
-
 
 	//ENEMY
 	updateEnemy()
@@ -145,18 +154,18 @@ draw :: proc() {
 }
 
 drawGui :: proc() {
-	rl.DrawText(rl.TextFormat("%f", rl.GetFrameTime()), i32(10), i32(120), 20, rl.WHITE)
-
-	rl.DrawText(
-		rl.TextFormat(
-			"Next Spawn: %f",
-			TIMERS["one"] + g_Game_State.enemySpawnTime - rl.GetTime(),
-		),
-		i32(10),
-		i32(170),
-		30,
-		rl.WHITE,
-	)
-
-	rl.DrawText(rl.TextFormat("Entities: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
+	// rl.DrawText(rl.TextFormat("%f", rl.GetFrameTime()), i32(10), i32(120), 20, rl.WHITE)
+	//
+	// rl.DrawText(
+	// 	rl.TextFormat(
+	// 		"Next Spawn: %f",
+	// 		TIMERS["one"] + g_Game_State.enemySpawnTime - rl.GetTime(),
+	// 	),
+	// 	i32(10),
+	// 	i32(170),
+	// 	30,
+	// 	rl.WHITE,
+	// )
+	//
+	// rl.DrawText(rl.TextFormat("Entities: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
 }
