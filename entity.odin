@@ -212,7 +212,8 @@ EntitySortList :: proc(
 ) -> [dynamic]EntityAtlas {
 	arrayOfEntities := arrayOfEntities
 	for array in arrayOfArrays {
-		append(&arrayOfEntities, ..array[:])
+		// fmt.println(array)
+		append(&arrayOfEntities, ..array[:]) 
 	}
 	return EntitySortArray(arrayOfEntities)
 }

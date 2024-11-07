@@ -17,7 +17,7 @@ updateEnemy :: proc() {
 		for &projectile in g_Game_State.projectiles {
 			if checkCollision(ent, projectile) {
 				projectile.health -= 1
-				ent.health -= 5
+				ent.health -= projectile.dmg
 			}
 		}
 

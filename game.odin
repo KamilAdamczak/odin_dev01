@@ -9,11 +9,12 @@ import rl "vendor:raylib"
 Game_State :: struct {
 	worldGrid:      [WORLD_GRID.x][WORLD_GRID.y]Tile,
 	camera:         rl.Camera2D,
-	player:         Player,
-	enemy:          [dynamic]EntityAtlas,
+	player:        	Player,
+	enemy:          [dynamic]Enemy,
 	enemySpawnTime: f64,
-	projectiles:    [dynamic]EntityAtlas,
+	projectiles:    [dynamic]Projectile,
 	assets:         map[string]rl.Texture2D,
+	particleManager : ParticleManager,
 }
 
 g_Game_State := Game_State {
@@ -28,7 +29,7 @@ spawnCount := 1
 DRAW_SHADOWS := true
 
 init :: proc() {
-	// sFPS.show = true
+	sFPS.show = true
 	rl.InitWindow(1280, 720, "vampire")
 
 	//LOAD ASSETS	
@@ -66,6 +67,9 @@ init :: proc() {
 	//INIT TIMERS
 	TIMERS["one"] = 0.0
 	TIMERS["two"] = 0.0
+
+	//INIT PARTICLE MANAGER
+	g_Game_State.particleManager = ParticleManager{}
 }
 
 closesEnemy: EntityAtlas
@@ -75,7 +79,7 @@ update :: proc() {
 
 	//PLAYER
 	playerMove()
-
+	
 	//Projectiles
 	updateProjectiles()
 	if len(g_Game_State.enemy) > 0 {
@@ -108,6 +112,9 @@ update :: proc() {
 	//ENEMY
 	updateEnemy()
 
+
+	//
+	ParticleManagerUpdate(g_Game_State.particleManager)
 	//DEBUG
 	if rl.IsKeyPressed(.SPACE) {
 		DRAW_COLLIDERS = !DRAW_COLLIDERS
@@ -128,15 +135,24 @@ update :: proc() {
 
 }
 
+childToParent::proc(child : $T) ->[dynamic]EntityAtlas {
+	parent : [dynamic]EntityAtlas
+	for ent in child {
+		append(&parent, ent.ent)
+	}
+	return parent
+}
+
 draw :: proc() {
-	EntitySort := EntitySort(
+
+	entitySort := EntitySort(
 		{g_Game_State.player},
-		[dynamic][dynamic]EntityAtlas{g_Game_State.enemy, g_Game_State.projectiles},
+		[dynamic][dynamic]EntityAtlas{childToParent(g_Game_State.enemy) , childToParent(g_Game_State.projectiles)},
 	)
 
 	if DRAW_SHADOWS {
 		LOOP_STATE = .DRAW_SHADOWS
-		for ent in EntitySort {
+		for ent in entitySort {
 			shadow := ent
 			shadow.pos.x -= 2
 			shadow.pos.y -= 3
@@ -145,12 +161,12 @@ draw :: proc() {
 	}
 
 	LOOP_STATE = .DRAW_SPRITES
-
-	for ent in EntitySort {
+	ParticleManagerDraw(&g_Game_State.particleManager)
+	for ent in entitySort {
 		EntityDraw(ent, ent.color)
 	}
 
-	delete(EntitySort)
+	// delete(EntitySort)
 }
 
 drawGui :: proc() {

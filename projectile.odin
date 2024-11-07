@@ -1,10 +1,12 @@
 package main
 
 import rl "vendor:raylib"
+import "core:fmt"
 
 Projectile :: struct {
 	using ent: EntityAtlas,
 	dmg:       int,
+	particleEmitter : ParticleEmitter
 }
 
 spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
@@ -17,14 +19,17 @@ spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
 				texture_scale = {16, 16},
 			},
 			health = 3,
-			speed = 4,
+			speed = 3,
 			color = rl.WHITE,
 			direction = direction,
 		},
 		dmg = 4,
 	}
 	projectile.collider = SetCollider(.OVAL, Vec2f{4.0, 0.0})
+	projectile.particleEmitter = createParticleEmmiter(projectile.pos, projectile.direction, 1.0, projectile.texture, 1)
 	append(&g_Game_State.projectiles, projectile)
+	append(&g_Game_State.particleManager.emitters, &projectile.particleEmitter)
+	// fmt.print(g_Game_State.particleManager.emitters)
 }
 
 updateProjectiles :: proc() {
@@ -36,5 +41,10 @@ updateProjectiles :: proc() {
 			continue
 		}
 		EntityMove(&projectile)
+
+		projectile.particleEmitter.pos = projectile.pos
+		// for number in 0..<4 {
+		// 	append(&g_Game_State.particleManager.particles, createParticle(projectile.pos+{f32(number), f32(number)}, -projectile.direction, projectile.texture, 0.1))
+		// }
 	}
 }

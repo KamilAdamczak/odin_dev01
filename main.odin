@@ -61,3 +61,8 @@ main :: proc() {
 
 	rl.CloseWindow()
 }
+
+
+print :: proc(text : string) {
+	fmt.println(text)
+}
