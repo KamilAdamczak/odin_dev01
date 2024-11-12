@@ -14,6 +14,7 @@ Game_State :: struct {
 	enemySpawnTime: f64,
 	projectiles:    [dynamic]Projectile,
 	assets:         map[string]rl.Texture2D,
+	particleEmmiters : [dynamic]ParticleEmitter,
 }
 
 g_Game_State := Game_State {
@@ -127,6 +128,9 @@ update :: proc() {
 		DRAW_SHADOWS = !DRAW_SHADOWS
 	}
 
+	for &emitter in g_Game_State.particleEmmiters {
+		ParticleEmitterUpdate(&emitter)
+	}
 }
 
 childToParent::proc(child : $T) ->[dynamic]EntityAtlas {
@@ -159,7 +163,9 @@ draw :: proc() {
 	for ent in entitySort {
 		EntityDraw(ent, ent.color)
 	}
-
+	for emitter in g_Game_State.particleEmmiters {
+		ParticleEmitterDraw(emitter)
+	}
 	// delete(EntitySort)
 }
 

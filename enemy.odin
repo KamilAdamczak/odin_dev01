@@ -18,6 +18,7 @@ updateEnemy :: proc() {
 			if checkCollision(ent, projectile) {
 				projectile.health -= 1
 				ent.health -= projectile.dmg
+				append(&g_Game_State.particleEmmiters, createParticleEmmiter(ent.pos,{-1, -1},1, projectile.texture, 1, .EXPLOSION))
 			}
 		}
 

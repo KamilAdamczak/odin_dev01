@@ -20,7 +20,7 @@ sFPS := SFPS {
 DRAW_COLLIDERS := false
 LOOP_STATE: LOOP_STATE_VALUES = .INIT
 main :: proc() {
-	// rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
+	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	init()
 	for !rl.WindowShouldClose() {
 		TICK_TIMER -= rl.GetFrameTime() //get delta time
@@ -33,7 +33,7 @@ main :: proc() {
 			LOOP_STATE = .UPDATE
 			update()
 			draw()
-			TICK_TIMER = TICK_RATE + TICK_TIMER
+			TICK_TIMER = (TICK_RATE + TICK_TIMER) 
 		}
 
 		rl.EndMode2D()

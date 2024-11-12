@@ -7,10 +7,11 @@ Particle :: struct {
     dir : Vec2f,
     sprite : Sprite,
     life : f32,
+    size : f32,
 }
 
 createParticle :: proc(pos : Vec2f, dir : Vec2f, sprite : Sprite, life : f32) -> Particle{
-    return Particle {pos, dir, sprite, life}
+    return Particle {pos, dir, sprite, life, 1}
 }
 
 ParticleEmitter :: struct {
@@ -20,29 +21,46 @@ ParticleEmitter :: struct {
     sprite : Sprite,
     emmisionLife : f32,
     particles : [dynamic] Particle,
+    emissiontype : EmityType,
 }
 
-createParticleEmmiter :: proc(pos : Vec2f, emmisionDirection: Vec2f, emmisionPower : f32, sprite : Sprite, emmisionLife : f32) -> ParticleEmitter {
-    return ParticleEmitter {pos, emmisionDirection, emmisionPower, sprite, emmisionLife, {}}
+EmityType :: enum {
+	EXPLOSION,
+	TRAIL,
+	FOUNTAIN,
+}
+
+createParticleEmmiter :: proc(pos : Vec2f, emmisionDirection: Vec2f, emmisionPower : f32, sprite : Sprite, emmisionLife : f32, emissiontype : EmityType = .TRAIL) -> ParticleEmitter {
+    return ParticleEmitter {pos, emmisionDirection, emmisionPower, sprite, emmisionLife, {}, emissiontype}
 }
 
 ParticleEmitterUpdate :: proc(particleEmitter : ^ParticleEmitter) {
-    append(&particleEmitter.particles, createParticle(
-        particleEmitter.pos, 
-        -particleEmitter.emmisionDirection,
-        particleEmitter.sprite,
-        particleEmitter.emmisionLife))
-    for &particle, index in particleEmitter.particles {
-        particle.pos +=
-        Vec2f{f32(particle.dir.x), f32(particle.dir.y)} *
-        1 *
-        f32(rl.GetFrameTime() * 100)
-        
-        particle.life -= .1
-        if particle.life <= 0 {
-            ordered_remove(&particleEmitter.particles, index)
+    switch particleEmitter.emissiontype {
+    case .TRAIL:
+        append(&particleEmitter.particles, createParticle(
+            particleEmitter.pos, 
+            -particleEmitter.emmisionDirection,
+            particleEmitter.sprite,
+            particleEmitter.emmisionLife))
+        for &particle, index in particleEmitter.particles {
+            particle.size -= .1
+            // particle.life -= .1
+            if particle.size <= .0 {
+                ordered_remove(&particleEmitter.particles, index)
+            }
         }
+    case .EXPLOSION:
+        if len(particleEmitter.particles) < 36 {
+            append(&particleEmitter.particles, createParticle(
+                particleEmitter.pos, 
+                -particleEmitter.emmisionDirection,
+                particleEmitter.sprite,
+                particleEmitter.emmisionLife))
+        }
+    case .FOUNTAIN:
     }
+    
+
     
 }
 
@@ -56,10 +74,10 @@ ParticleEmitterDraw :: proc(particleEmitter : ParticleEmitter) {
                     f32(particle.sprite.texture_scale.x),
                     f32(particle.sprite.texture_scale.y),
                 },
-                {f32(particle.pos.x), f32(particle.pos.y), 8.0, 8.0},
-                {8, 8},
+                {f32(particle.pos.x), f32(particle.pos.y), f32(particle.sprite.texture_scale.x)*particle.size, f32(particle.sprite.texture_scale.y)*particle.size},
+                {8, 8}*particle.size,
                 0.0,
-                rl.WHITE,
+                rl.WHITE - {0,0,0,0},
             )
     }
 }

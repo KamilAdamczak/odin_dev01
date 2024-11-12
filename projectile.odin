@@ -37,6 +37,8 @@ updateProjectiles :: proc() {
 		if projectile.health <= 0 ||
 		   abs(projectile.pos.x - g_Game_State.player.pos.x) > 1000 ||
 		   abs(projectile.pos.y - g_Game_State.player.pos.y) > 1000 {
+			projectile.dmg = 0
+			projectile.color = rl.Color {0,0,0,0}
 			ordered_remove(&g_Game_State.projectiles, index)
 			continue
 		}
