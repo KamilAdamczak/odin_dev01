@@ -28,7 +28,7 @@ spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
 	projectile.collider = SetCollider(.OVAL, Vec2f{4.0, 0.0})
 	projectile.particleEmitter = createParticleEmmiter(projectile.pos, projectile.direction, 1.0, projectile.texture, 1)
 	append(&g_Game_State.projectiles, projectile)
-	append(&g_Game_State.particleManager.emitters, &projectile.particleEmitter)
+	
 	// fmt.print(g_Game_State.particleManager.emitters)
 }
 
@@ -43,6 +43,8 @@ updateProjectiles :: proc() {
 		EntityMove(&projectile)
 
 		projectile.particleEmitter.pos = projectile.pos
+		ParticleEmitterUpdate(&projectile.particleEmitter)
+		ParticleEmitterDraw(projectile.particleEmitter)
 		// for number in 0..<4 {
 		// 	append(&g_Game_State.particleManager.particles, createParticle(projectile.pos+{f32(number), f32(number)}, -projectile.direction, projectile.texture, 0.1))
 		// }

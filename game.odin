@@ -14,7 +14,6 @@ Game_State :: struct {
 	enemySpawnTime: f64,
 	projectiles:    [dynamic]Projectile,
 	assets:         map[string]rl.Texture2D,
-	particleManager : ParticleManager,
 }
 
 g_Game_State := Game_State {
@@ -68,8 +67,6 @@ init :: proc() {
 	TIMERS["one"] = 0.0
 	TIMERS["two"] = 0.0
 
-	//INIT PARTICLE MANAGER
-	g_Game_State.particleManager = ParticleManager{}
 }
 
 closesEnemy: EntityAtlas
@@ -112,9 +109,6 @@ update :: proc() {
 	//ENEMY
 	updateEnemy()
 
-
-	//
-	ParticleManagerUpdate(g_Game_State.particleManager)
 	//DEBUG
 	if rl.IsKeyPressed(.SPACE) {
 		DRAW_COLLIDERS = !DRAW_COLLIDERS
@@ -161,7 +155,7 @@ draw :: proc() {
 	}
 
 	LOOP_STATE = .DRAW_SPRITES
-	ParticleManagerDraw(&g_Game_State.particleManager)
+
 	for ent in entitySort {
 		EntityDraw(ent, ent.color)
 	}

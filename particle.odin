@@ -26,41 +26,42 @@ createParticleEmmiter :: proc(pos : Vec2f, emmisionDirection: Vec2f, emmisionPow
     return ParticleEmitter {pos, emmisionDirection, emmisionPower, sprite, emmisionLife, {}}
 }
 
-ParticleManager :: struct {
-    particles : [dynamic]Particle,
-    emitters : [dynamic]^ParticleEmitter,
-}
-
-ParticleManagerUpdate :: proc(particleManager : ParticleManager) {
-    particles := particleManager.particles
-    for &particle, index in particles {
+ParticleEmitterUpdate :: proc(particleEmitter : ^ParticleEmitter) {
+    append(&particleEmitter.particles, createParticle(
+        particleEmitter.pos, 
+        -particleEmitter.emmisionDirection,
+        particleEmitter.sprite,
+        particleEmitter.emmisionLife))
+    for &particle, index in particleEmitter.particles {
         particle.pos +=
-		Vec2f{f32(particle.dir.x), f32(particle.dir.y)} *
-		1 *
-		f32(rl.GetFrameTime() * 100)
-
+        Vec2f{f32(particle.dir.x), f32(particle.dir.y)} *
+        1 *
+        f32(rl.GetFrameTime() * 100)
+        
+        particle.life -= .1
         if particle.life <= 0 {
-            ordered_remove(&particles, index)
+            ordered_remove(&particleEmitter.particles, index)
         }
     }
+    
 }
 
-ParticleManagerDraw :: proc(particleManager : ^ParticleManager) {
-    particles := particleManager.particles
-    for particle in particles {
-        rl.DrawTexturePro(
-            particle.sprite.texture,
-            {
-                f32(particle.sprite.atlas_pos.x) * 16,
-                f32(particle.sprite.atlas_pos.y) * 16,
-                f32(particle.sprite.texture_scale.x),
-                f32(particle.sprite.texture_scale.y),
-            },
-            {f32(particle.pos.x), f32(particle.pos.y), 8.0, 8.0},
-            {8, 8},
-            0.0,
-            rl.WHITE,
-        )
+ParticleEmitterDraw :: proc(particleEmitter : ParticleEmitter) {
+    for particle in particleEmitter.particles {
+            rl.DrawTexturePro(
+                particle.sprite.texture,
+                {
+                    f32(particle.sprite.atlas_pos.x) * 16,
+                    f32(particle.sprite.atlas_pos.y) * 16,
+                    f32(particle.sprite.texture_scale.x),
+                    f32(particle.sprite.texture_scale.y),
+                },
+                {f32(particle.pos.x), f32(particle.pos.y), 8.0, 8.0},
+                {8, 8},
+                0.0,
+                rl.WHITE,
+            )
     }
-    fmt.print(&particleManager.emitters)
 }
+
+
