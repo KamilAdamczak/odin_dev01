@@ -22,6 +22,7 @@ spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
 			speed = 3,
 			color = rl.WHITE,
 			direction = direction,
+			id = int(rl.GetRandomValue(0, 1000000000))
 		},
 		dmg = 4,
 	}

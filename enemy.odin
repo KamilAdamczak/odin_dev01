@@ -1,9 +1,11 @@
 package main
 
 import rl "vendor:raylib"
+import "core:fmt"
 
 Enemy :: struct {
 	using ent: EntityAtlas,
+	projectiles : [dynamic]Projectile
 }
 
 updateEnemy :: proc() {
@@ -16,16 +18,20 @@ updateEnemy :: proc() {
 
 		for &projectile in g_Game_State.projectiles {
 			if checkCollision(ent, projectile) {
-				projectile.health -= 1
-				ent.health -= projectile.dmg
-				append(&g_Game_State.particleEmmiters, createParticleEmmiter(ent.pos,{-1, -1},1, projectile.texture, 1, .EXPLOSION))
+				if(!has(ent.projectiles, projectile)) {
+					projectile.health -= 1
+					ent.health -= projectile.dmg
+					append(&g_Game_State.particleEmmiters, createParticleEmmiter(ent.pos,{-1, -1},1, projectile.texture, 1, .EXPLOSION))
+					append(&ent.projectiles, projectile)
+					fmt.println(projectile)
+				}
 			}
 		}
 
 		ent.direction = calcDirection(ent.pos, g_Game_State.player.pos)
 		collision := false
 		for entB in g_Game_State.enemy {
-			if ent == entB ||
+			if ent.ent == entB.ent ||
 			   collision ||
 			   abs(ent.pos.x - entB.pos.x) > 20 ||
 			   abs(ent.pos.y - entB.pos.y) > 20 {
@@ -73,6 +79,7 @@ spawnEnemy :: proc() {
 			},
 			id = int(spawnCount),
 		},
+		projectiles = [dynamic]Projectile{},
 	}
 	enemy.collider = SetCollider(.OVAL, Vec2f{3, 0})
 	append(&g_Game_State.enemy, enemy)

@@ -70,7 +70,7 @@ init :: proc() {
 
 }
 
-closesEnemy: EntityAtlas
+closesEnemy: Enemy
 update :: proc() {
 	camera.target = g_Game_State.player.pos
 	timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)

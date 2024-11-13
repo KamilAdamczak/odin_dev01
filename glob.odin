@@ -52,11 +52,22 @@ calcDirection :: proc(pointA: Vec2f, pointB: Vec2f) -> Vec2f {
 
 getIndex :: proc(array: [dynamic]EntityAtlas, object: Enemy) -> int {
 	for index in 00 ..< len(array) {
-		if array[index] == object {
+		if array[index] == object.ent {
 			return index
 		}
 	}
 	return 0
+}
+
+has :: proc(array : [dynamic]$T, object : T) -> bool {
+	for obj in array {
+		if obj.id == object.id {
+			return true
+		} else {
+			continue
+		}
+	}
+	return false
 }
 
 timerRun :: proc(timer: ^f64, timeToWait: f64, currentTime: f64, callProcedure: proc()) {
