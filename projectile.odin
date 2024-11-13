@@ -18,18 +18,17 @@ spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
 				atlas_pos = {0, 1},
 				texture_scale = {16, 16},
 			},
-			health = 3,
+			health = 1,
 			speed = 3,
 			color = rl.WHITE,
 			direction = direction,
 			id = int(rl.GetRandomValue(0, 1000000000))
 		},
-		dmg = 4,
+		dmg = 10,
 	}
 	projectile.collider = SetCollider(.OVAL, Vec2f{4.0, 0.0})
-	projectile.particleEmitter = createParticleEmmiter(projectile.pos, projectile.direction, 1.0, projectile.texture, 1)
+	projectile.particleEmitter = createParticleEmmiter(projectile.pos, projectile.direction, 1.0, projectile.texture, 100000000)
 	append(&g_Game_State.projectiles, projectile)
-	
 	// fmt.print(g_Game_State.particleManager.emitters)
 }
 
@@ -40,11 +39,11 @@ updateProjectiles :: proc() {
 		   abs(projectile.pos.y - g_Game_State.player.pos.y) > 1000 {
 			projectile.dmg = 0
 			projectile.color = rl.Color {0,0,0,0}
+			clearTimers(projectile.particleEmitter)
 			ordered_remove(&g_Game_State.projectiles, index)
 			continue
 		}
 		EntityMove(&projectile)
-
 		projectile.particleEmitter.pos = projectile.pos
 		ParticleEmitterUpdate(&projectile.particleEmitter)
 		ParticleEmitterDraw(projectile.particleEmitter)

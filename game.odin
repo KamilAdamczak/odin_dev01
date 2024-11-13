@@ -31,7 +31,6 @@ DRAW_SHADOWS := true
 init :: proc() {
 	sFPS.show = true
 	rl.InitWindow(1280, 720, "vampire")
-
 	//LOAD ASSETS	
 	g_Game_State.assets = {
 		"atlas" = rl.LoadTexture("./assets/atlas.png"),
@@ -59,7 +58,7 @@ init :: proc() {
 		texture_scale = {16, 16},
 	}
 
-	g_Game_State.player.collider = SetCollider(.OVAL, Vec2f{35, 0})
+	g_Game_State.player.collider = SetCollider(.OVAL, Vec2f{15, 0})
 
 	//CAMERA
 	camera.target = g_Game_State.player.pos
@@ -72,7 +71,6 @@ init :: proc() {
 
 closesEnemy: Enemy
 update :: proc() {
-	camera.target = g_Game_State.player.pos
 	timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
 
 	//PLAYER
@@ -131,10 +129,12 @@ update :: proc() {
 	for &emitter in g_Game_State.particleEmmiters {
 		ParticleEmitterUpdate(&emitter)
 	}
+
+	camera.offset = {f32(rl.GetScreenWidth()/2), f32(rl.GetScreenHeight()/2)}
+	camera.target = g_Game_State.player.pos
 }
 
-childToParent::proc(child : $T) ->[dynamic]EntityAtlas {
-	parent : [dynamic]EntityAtlas
+childToParent::proc(child : $T) -> (parent : [dynamic]EntityAtlas) {
 	for ent in child {
 		append(&parent, ent.ent)
 	}
@@ -142,7 +142,6 @@ childToParent::proc(child : $T) ->[dynamic]EntityAtlas {
 }
 
 draw :: proc() {
-
 	entitySort := EntitySort(
 		{g_Game_State.player},
 		[dynamic][dynamic]EntityAtlas{childToParent(g_Game_State.enemy) , childToParent(g_Game_State.projectiles)},
@@ -166,22 +165,22 @@ draw :: proc() {
 	for emitter in g_Game_State.particleEmmiters {
 		ParticleEmitterDraw(emitter)
 	}
-	// delete(EntitySort)
+	delete(entitySort)
 }
 
 drawGui :: proc() {
-	// rl.DrawText(rl.TextFormat("%f", rl.GetFrameTime()), i32(10), i32(120), 20, rl.WHITE)
-	//
-	// rl.DrawText(
-	// 	rl.TextFormat(
-	// 		"Next Spawn: %f",
-	// 		TIMERS["one"] + g_Game_State.enemySpawnTime - rl.GetTime(),
-	// 	),
-	// 	i32(10),
-	// 	i32(170),
-	// 	30,
-	// 	rl.WHITE,
-	// )
-	//
-	// rl.DrawText(rl.TextFormat("Entities: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
+	rl.DrawText(rl.TextFormat("%f", rl.GetFrameTime()), i32(10), i32(120), 20, rl.WHITE)
+	
+	rl.DrawText(
+		rl.TextFormat(
+			"Next Spawn: %f",
+			TIMERS["one"] + g_Game_State.enemySpawnTime - rl.GetTime(),
+		),
+		i32(10),
+		i32(170),
+		30,
+		rl.WHITE,
+	)
+	
+	rl.DrawText(rl.TextFormat("Entities: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
 }

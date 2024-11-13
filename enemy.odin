@@ -2,6 +2,7 @@ package main
 
 import rl "vendor:raylib"
 import "core:fmt"
+import "core:math/rand"
 
 Enemy :: struct {
 	using ent: EntityAtlas,
@@ -21,9 +22,8 @@ updateEnemy :: proc() {
 				if(!has(ent.projectiles, projectile)) {
 					projectile.health -= 1
 					ent.health -= projectile.dmg
-					append(&g_Game_State.particleEmmiters, createParticleEmmiter(ent.pos,{-1, -1},1, projectile.texture, 1, .EXPLOSION))
+					append(&g_Game_State.particleEmmiters, createParticleEmmiter(ent.pos,{-1, -1},1, projectile.texture, 4, .EXPLOSION))
 					append(&ent.projectiles, projectile)
-					fmt.println(projectile)
 				}
 			}
 		}
@@ -59,18 +59,30 @@ updateEnemy :: proc() {
 
 }
 
+enemySpawnLocation :[4]i32 = {1,2,3,4}
+
 spawnEnemy :: proc() {
+	spawnLocation : Vec2f
+	switch rand.choice(enemySpawnLocation[:]) {
+		case 1: 
+			spawnLocation = {f32(rl.GetScreenWidth()/2), f32(rl.GetRandomValue(-rl.GetScreenHeight()/2, rl.GetScreenHeight()/2))}
+		case 2:
+			spawnLocation = {-f32(rl.GetScreenWidth()/2), f32(rl.GetRandomValue(-rl.GetScreenHeight()/2, rl.GetScreenHeight()/2))}
+		case 3:
+			spawnLocation = {f32(rl.GetRandomValue(-rl.GetScreenWidth()/2, rl.GetScreenWidth()/2)), f32(rl.GetScreenHeight()/2)}
+		case 4:
+			spawnLocation = {f32(rl.GetRandomValue(-rl.GetScreenWidth()/2, rl.GetScreenWidth()/2)), f32(-rl.GetScreenHeight()/2)}
+	}
 	enemy := Enemy {
 		ent = EntityAtlas {
-			pos = g_Game_State.player.pos +
-			{f32(rl.GetRandomValue(-3, 3) * 100), f32(rl.GetRandomValue(-3, 3) * 100)},
+			pos = g_Game_State.player.pos + (spawnLocation*0.5),
 			texture = Sprite {
 				texture = g_Game_State.assets["atlas"],
 				atlas_pos = {int(rl.GetRandomValue(0, 2)), 0},
 				texture_scale = {16, 16},
 			},
 			health = 20,
-			speed = f32(rl.GetRandomValue(1, 5)) / 10,
+			speed = f32(rl.GetRandomValue(1, 5)) / 7,
 			color = rl.Color {
 				cast(u8)rl.GetRandomValue(0, 255),
 				cast(u8)rl.GetRandomValue(0, 255),
