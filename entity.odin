@@ -119,7 +119,8 @@ EntityAtlas :: struct {
 	color:     rl.Color,
 	health:    int,
 	collider:  Collider,
-	id:        int,
+	id:        string,
+	rotation:  f32,
 }
 
 Sprite :: struct {
@@ -200,7 +201,7 @@ EntityDrawTint :: proc(ent: EntityAtlas, tint: rl.Color) {
 		},
 		{f32(ent.pos.x), f32(ent.pos.y), 16.0, 16.0},
 		{8, 8},
-		0.0,
+		ent.rotation,
 		tint,
 	)
 	// rl.DrawTextureEx(ent.texture, ent.pos, 0.0, camera.zoom, tint)

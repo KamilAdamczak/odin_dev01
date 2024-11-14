@@ -3,10 +3,30 @@ package main
 import rl "vendor:raylib"
 import "core:fmt"
 import "core:math/rand"
+import "core:strings"
 
 Enemy :: struct {
 	using ent: EntityAtlas,
-	projectiles : [dynamic]Projectile
+	projectiles : [dynamic]Projectile,
+	state : enemyState,
+	currentDir : int,
+}
+
+enemyState :: enum {
+	IDLE,
+	MOVE,
+	ATTACK,
+}
+enemyAnimation :: struct {
+	startDir : int,
+	rightAngle : f32,
+	leftAngle : f32,
+}
+
+EnemyID : [dynamic]string = {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","T","U","V","X","Y","Z"}
+
+enemyAnimations := map[string]enemyAnimation {
+	"RUN" = {1, 40,-40},
 }
 
 updateEnemy :: proc() {
@@ -54,13 +74,45 @@ updateEnemy :: proc() {
 		}
 		if !collision {
 			EntityMove(&ent)
+			ent.state = .MOVE
+		} else {
+			ent.state = .IDLE
 		}
+	
+		switch ent.state {
+			case .IDLE:
+				ent.rotation = 0
+			case .ATTACK:
+			case .MOVE:
+				timeRunWithVariable(&TIMERS[ent.id], f64(10-ent.speed)*.003, rl.GetTime(),&ent, enemyRUN)
+		}
+
 	}
-
 }
-
 enemySpawnLocation :[4]i32 = {1,2,3,4}
 
+enemyRUN :: proc(current_enemy : ^Enemy) {
+
+	if current_enemy.currentDir == 1 {
+		if enemyAnimations["RUN"].rightAngle > current_enemy.rotation {
+			current_enemy.rotation += 5
+		} else {
+			current_enemy.currentDir = -1
+
+		}
+	} else if current_enemy.currentDir == -1 {
+		
+		if enemyAnimations["RUN"].leftAngle < current_enemy.rotation {
+
+			current_enemy.rotation -= 5
+		} else {
+			current_enemy.currentDir = 1
+		}
+	} else {
+		current_enemy.currentDir = enemyAnimations["RUN"].startDir
+		
+	}
+}
 spawnEnemy :: proc() {
 	spawnLocation : Vec2f
 	switch rand.choice(enemySpawnLocation[:]) {
@@ -89,11 +141,13 @@ spawnEnemy :: proc() {
 				cast(u8)rl.GetRandomValue(0, 255),
 				255,
 			},
-			id = int(spawnCount),
+			id = combine({rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:])})
 		},
 		projectiles = [dynamic]Projectile{},
+		state = .IDLE
 	}
 	enemy.collider = SetCollider(.OVAL, Vec2f{3, 0})
 	append(&g_Game_State.enemy, enemy)
+	TIMERS[enemy.id] = 0.0
 	spawnCount += 1
 }

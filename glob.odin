@@ -2,6 +2,9 @@ package main
 
 import "core:math"
 import "core:slice"
+import "core:strconv"
+import "core:fmt"
+import "core:strings"
 
 //GLOBALS VALUES
 WORLD_WIDTH :: 1
@@ -31,9 +34,7 @@ LOOP_STATE_VALUES :: enum {
 	DRAW_GUI,
 }
 
-TIMERS := map[string]f64 {
-	"one" = 0.0,
-}
+TIMERS := map[string]f64 {}
 
 //UTILITY PROC
 calcDirection :: proc(pointA: Vec2f, pointB: Vec2f) -> Vec2f {
@@ -70,11 +71,33 @@ has :: proc(array : [dynamic]$T, object : T) -> bool {
 	return false
 }
 
-timerRun :: proc(timer: ^f64, timeToWait: f64, currentTime: f64, callProcedure: proc()) {
+timerRun :: proc {
+	timeRunNormal,
+	timeRunWithVariable,
+}
+
+timeRunNormal :: proc(timer: ^f64, timeToWait: f64, currentTime: f64, callProcedure: proc()) {
 	if (timer^ + timeToWait < currentTime) {
 		callProcedure()
 		timer^ = currentTime
 	}
+}
+
+timeRunWithVariable :: proc(timer: ^f64, timeToWait: f64, currentTime: f64 , var : ^$T , callProcedure: proc(var : ^T)) {
+	if (timer^ + timeToWait < currentTime) {
+		callProcedure(var)
+		timer^ = currentTime
+	}
+}
+
+combine :: proc(texts : [dynamic]string) -> string {
+	return strings.join(texts[:],"")
+}
+
+IntToString :: proc(value:int) -> string {
+	buf: [64]u8 = ---
+	s := strconv.itoa(buf[:], value)
+	return s
 }
 
 // ScreenToWorld :: proc(screen_pos: Vec2f) -> Vec2i {

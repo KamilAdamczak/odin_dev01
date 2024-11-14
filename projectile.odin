@@ -2,12 +2,15 @@ package main
 
 import rl "vendor:raylib"
 import "core:fmt"
+import "core:math/rand"
 
 Projectile :: struct {
 	using ent: EntityAtlas,
 	dmg:       int,
 	particleEmitter : ParticleEmitter
 }
+
+ProjectileID : [dynamic]string = {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","T","U","V","X","Y","Z"}
 
 spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
 	projectile := Projectile {
@@ -22,7 +25,7 @@ spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
 			speed = 3,
 			color = rl.WHITE,
 			direction = direction,
-			id = int(rl.GetRandomValue(0, 1000000000))
+			id = combine({rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:])})
 		},
 		dmg = 10,
 	}

@@ -59,17 +59,17 @@ init :: proc() {
 	}
 
 	g_Game_State.player.collider = SetCollider(.OVAL, Vec2f{15, 0})
-
+	g_Game_State.player.state = .IDLE
+	TIMERS["player"] = 0.0
 	//CAMERA
 	camera.target = g_Game_State.player.pos
 
 	//INIT TIMERS
 	TIMERS["one"] = 0.0
 	TIMERS["two"] = 0.0
-
 }
 
-closesEnemy: Enemy
+closesEnemy : Enemy
 update :: proc() {
 	timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
 
@@ -80,7 +80,7 @@ update :: proc() {
 	updateProjectiles()
 	if len(g_Game_State.enemy) > 0 {
 		closesEnemy = g_Game_State.enemy[0]
-		timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(), proc() {
+		timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(),proc() {
 			for ent in g_Game_State.enemy {
 				new_cc := math.sqrt(
 					(abs(ent.pos.x - g_Game_State.player.pos.x) *
@@ -169,18 +169,19 @@ draw :: proc() {
 }
 
 drawGui :: proc() {
-	rl.DrawText(rl.TextFormat("%f", rl.GetFrameTime()), i32(10), i32(120), 20, rl.WHITE)
+	// rl.DrawText(rl.TextFormat("%f", rl.GetFrameTime()), i32(10), i32(120), 20, rl.WHITE)
 	
-	rl.DrawText(
-		rl.TextFormat(
-			"Next Spawn: %f",
-			TIMERS["one"] + g_Game_State.enemySpawnTime - rl.GetTime(),
-		),
-		i32(10),
-		i32(170),
-		30,
-		rl.WHITE,
-	)
+	// rl.DrawText(
+	// 	rl.TextFormat(
+	// 		"Next Spawn: %f",
+	// 		TIMERS["one"] + g_Game_State.enemySpawnTime - rl.GetTime(),
+	// 	),
+	// 	i32(10),
+	// 	i32(170),
+	// 	30,
+	// 	rl.WHITE,
+	// )
 	
-	rl.DrawText(rl.TextFormat("Entities: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
+	// rl.DrawText(rl.TextFormat("Entities: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
+	// rl.DrawText(rl.TextFormat("Player State: %i", g_Game_State.player.state), i32(10), i32(240), 30, rl.WHITE)
 }
