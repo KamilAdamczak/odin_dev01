@@ -18,15 +18,14 @@ enemyState :: enum {
 	ATTACK,
 }
 enemyAnimation :: struct {
-	startDir : int,
-	rightAngle : f32,
-	leftAngle : f32,
+	valA : [dynamic]int,
+	valB : [dynamic]f32,
+	valC : [dynamic]f32,
 }
 
-EnemyID : [dynamic]string = {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","T","U","V","X","Y","Z"}
-
 enemyAnimations := map[string]enemyAnimation {
-	"RUN" = {1, 40,-40},
+	"RUN" = {{1}, {40,-40},{}},
+	"ATTACK" = {{1},{.6},{}}
 }
 
 updateEnemy :: proc() {
@@ -39,7 +38,7 @@ updateEnemy :: proc() {
 
 		for &projectile in g_Game_State.projectiles {
 			if checkCollision(ent, projectile) {
-				if(!has(ent.projectiles, projectile)) {
+				if(!hasID(ent.projectiles, projectile)) {
 					projectile.health -= 1
 					ent.health -= projectile.dmg
 					append(&g_Game_State.particleEmmiters, createParticleEmmiter(ent.pos,{-1, -1},1, projectile.texture, 4, .EXPLOSION))
@@ -71,30 +70,34 @@ updateEnemy :: proc() {
 		}
 		if checkCollision(ent, g_Game_State.player) {
 			collision = true
+			ent.state = .ATTACK
 		}
 		if !collision {
 			EntityMove(&ent)
 			ent.state = .MOVE
 		} else {
-			ent.state = .IDLE
+			if ent.state != .ATTACK {
+				ent.state = .IDLE
+			}
 		}
 	
 		switch ent.state {
 			case .IDLE:
 				ent.rotation = 0
 			case .ATTACK:
+				ent.rotation = 0
+				timerRun(&TIMERS[ent.id], .1, rl.GetTime(),&ent, enemyAttack)
 			case .MOVE:
-				timeRunWithVariable(&TIMERS[ent.id], f64(10-ent.speed)*.003, rl.GetTime(),&ent, enemyRUN)
+				timerRun(&TIMERS[ent.id], f64(10-ent.speed)*.003, rl.GetTime(),&ent, enemyRUN)
 		}
 
 	}
 }
-enemySpawnLocation :[4]i32 = {1,2,3,4}
+
 
 enemyRUN :: proc(current_enemy : ^Enemy) {
-
 	if current_enemy.currentDir == 1 {
-		if enemyAnimations["RUN"].rightAngle > current_enemy.rotation {
+		if enemyAnimations["RUN"].valB[0] > current_enemy.rotation {
 			current_enemy.rotation += 5
 		} else {
 			current_enemy.currentDir = -1
@@ -102,17 +105,30 @@ enemyRUN :: proc(current_enemy : ^Enemy) {
 		}
 	} else if current_enemy.currentDir == -1 {
 		
-		if enemyAnimations["RUN"].leftAngle < current_enemy.rotation {
+		if enemyAnimations["RUN"].valB[1] < current_enemy.rotation {
 
 			current_enemy.rotation -= 5
 		} else {
 			current_enemy.currentDir = 1
 		}
 	} else {
-		current_enemy.currentDir = enemyAnimations["RUN"].startDir
-		
+		current_enemy.currentDir = enemyAnimations["RUN"].valA[0]
 	}
 }
+
+enemyAttack :: proc(ent : ^Enemy) {
+	// if ent.currentDir == 1 {
+	// 	if(ent.texture.offset.x < enemyAnimations["Attack"].valB[0]) {
+	// 		ent.texture.offset -= 1
+	// 	}
+	// } else if ent.currentDir == -1 {
+
+	// } else {
+	// 	ent.currentDir = enemyAnimations["Attack"].valA[0]
+	// }
+}
+
+enemySpawnLocation :[4]i32 = {1,2,3,4}
 spawnEnemy :: proc() {
 	spawnLocation : Vec2f
 	switch rand.choice(enemySpawnLocation[:]) {
@@ -141,7 +157,7 @@ spawnEnemy :: proc() {
 				cast(u8)rl.GetRandomValue(0, 255),
 				255,
 			},
-			id = combine({rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:])})
+			id = genRandString(10)
 		},
 		projectiles = [dynamic]Projectile{},
 		state = .IDLE

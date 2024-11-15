@@ -33,8 +33,6 @@ ParticleEmitter :: struct {
     id : string,
 }
 
-ParticleEmitterID : [dynamic]string = {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","T","U","V","X","Y","Z"}
-
 EmittType :: enum {
 	EXPLOSION,
 	TRAIL,
@@ -49,7 +47,7 @@ EmittShape :: enum {
 
 createParticleEmmiter :: proc(pos : Vec2f, emmisionDirection: Vec2f, emmisionPower : f32, sprite : Sprite, emmisionLife : f32, emissiontype : EmittType = .TRAIL, emissionshape : EmittShape = nil) -> ParticleEmitter {
     // rand.reset(u64(emmisionDirection.x*emmisionDirection.y+f32(rl.GetTime())*f32(rl.GetRandomValue(0,100))))
-    id := strings.join({rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:]),rand.choice(ParticleEmitterID[:])}, rand.choice(ParticleEmitterID[:]))
+    id := genRandString(10)
     TIMERS[id] = 0.0
     emissionshaper : EmittShape
     if (emissionshape == nil) {
@@ -74,14 +72,11 @@ clearTimers :: proc(particleEmitter : ParticleEmitter) {
     delete_key(&TIMERS, particleEmitter.id)
 }
 
-partEm : ^ParticleEmitter
 ParticleEmitterUpdate :: proc(particleEmitter : ^ParticleEmitter) {
-    // fmt.println(TIMERS)
-    partEm = particleEmitter
     if (particleEmitter.emmisionLife < 0) {
         destroyGlobalParticleEmmiter(&g_Game_State, particleEmitter)
     } else {
-        timerRun(&TIMERS[particleEmitter.id], .1, rl.GetTime(), proc() {partEm.emmisionLife -= 1})
+        timerRun(&TIMERS[particleEmitter.id], .1, rl.GetTime(), particleEmitter ,proc(partEm : ^ParticleEmitter) {partEm.emmisionLife -= 1})
     }
 
     switch particleEmitter.emissionType {

@@ -127,6 +127,7 @@ Sprite :: struct {
 	texture:       rl.Texture2D,
 	atlas_pos:     Vec2i,
 	texture_scale: Vec2i,
+	offset : Vec2f,
 }
 
 EntityMove :: proc(body: ^EntityAtlas) {
@@ -199,12 +200,11 @@ EntityDrawTint :: proc(ent: EntityAtlas, tint: rl.Color) {
 			ent.direction.x >= 0 ? f32(ent.texture.texture_scale.x) : -f32(ent.texture.texture_scale.x),
 			f32(ent.texture.texture_scale.y),
 		},
-		{f32(ent.pos.x), f32(ent.pos.y), 16.0, 16.0},
+		{f32(ent.pos.x)+ent.texture.offset.x, f32(ent.pos.y)+ent.texture.offset.y, 16.0, 16.0},
 		{8, 8},
 		ent.rotation,
 		tint,
 	)
-	// rl.DrawTextureEx(ent.texture, ent.pos, 0.0, camera.zoom, tint)
 }
 
 EntitySortList :: proc(

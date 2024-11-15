@@ -5,6 +5,7 @@ import "core:slice"
 import "core:strconv"
 import "core:fmt"
 import "core:strings"
+import "core:math/rand"
 
 //GLOBALS VALUES
 WORLD_WIDTH :: 1
@@ -60,7 +61,7 @@ getIndex :: proc(array: [dynamic]EntityAtlas, object: Enemy) -> int {
 	return 0
 }
 
-has :: proc(array : [dynamic]$T, object : T) -> bool {
+hasID :: proc(array : [dynamic]$T, object : T) -> bool {
 	for obj in array {
 		if obj.id == object.id {
 			return true
@@ -98,6 +99,18 @@ IntToString :: proc(value:int) -> string {
 	buf: [64]u8 = ---
 	s := strconv.itoa(buf[:], value)
 	return s
+}
+
+genChar :: proc() -> string {
+	charSet : [24]string =  {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","T","U","V","X","Y","Z"}
+	return rand.choice(charSet[:])
+}
+
+genRandString :: proc(lenght : int) -> (randomString : string) {
+	for index in 0..<lenght {
+		randomString = combine({randomString, genChar()})
+	}
+	return randomString
 }
 
 // ScreenToWorld :: proc(screen_pos: Vec2f) -> Vec2i {

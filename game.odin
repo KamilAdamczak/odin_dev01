@@ -69,7 +69,6 @@ init :: proc() {
 	TIMERS["two"] = 0.0
 }
 
-closesEnemy : Enemy
 update :: proc() {
 	timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
 
@@ -79,8 +78,8 @@ update :: proc() {
 	//Projectiles
 	updateProjectiles()
 	if len(g_Game_State.enemy) > 0 {
-		closesEnemy = g_Game_State.enemy[0]
 		timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(),proc() {
+			closesEnemy := g_Game_State.enemy[0]
 			for ent in g_Game_State.enemy {
 				new_cc := math.sqrt(
 					(abs(ent.pos.x - g_Game_State.player.pos.x) *

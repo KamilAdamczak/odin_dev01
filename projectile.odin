@@ -10,8 +10,6 @@ Projectile :: struct {
 	particleEmitter : ParticleEmitter
 }
 
-ProjectileID : [dynamic]string = {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","T","U","V","X","Y","Z"}
-
 spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
 	projectile := Projectile {
 		ent = EntityAtlas {
@@ -25,14 +23,13 @@ spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
 			speed = 3,
 			color = rl.WHITE,
 			direction = direction,
-			id = combine({rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:]),rand.choice(EnemyID[:])})
+			id = genRandString(20)
 		},
 		dmg = 10,
 	}
 	projectile.collider = SetCollider(.OVAL, Vec2f{4.0, 0.0})
 	projectile.particleEmitter = createParticleEmmiter(projectile.pos, projectile.direction, 1.0, projectile.texture, 100000000)
 	append(&g_Game_State.projectiles, projectile)
-	// fmt.print(g_Game_State.particleManager.emitters)
 }
 
 updateProjectiles :: proc() {
@@ -50,8 +47,5 @@ updateProjectiles :: proc() {
 		projectile.particleEmitter.pos = projectile.pos
 		ParticleEmitterUpdate(&projectile.particleEmitter)
 		ParticleEmitterDraw(projectile.particleEmitter)
-		// for number in 0..<4 {
-		// 	append(&g_Game_State.particleManager.particles, createParticle(projectile.pos+{f32(number), f32(number)}, -projectile.direction, projectile.texture, 0.1))
-		// }
 	}
 }
