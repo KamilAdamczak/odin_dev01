@@ -22,7 +22,7 @@ playerAnimation :: struct {
 }
  
 playerAnimations := map[string]playerAnimation {
-	"RUN" = {1, 40,-40},
+	"RUN" = {1, 30,-30},
 }
 
 playerMove :: proc() {
@@ -55,7 +55,13 @@ playerMove :: proc() {
 
 	switch g_Game_State.player.state {
 		case .IDLE:
-			g_Game_State.player.rotation = 0
+			if g_Game_State.player.rotation > 0 {
+				g_Game_State.player.rotation -= 5
+			} else if g_Game_State.player.rotation < 0 {
+				g_Game_State.player.rotation += 5
+			} else {
+				g_Game_State.player.rotation = 0
+			}
 		case .ATTACK:
 		case .MOVE:
 			timerRun(&TIMERS["player"], .01, rl.GetTime(),playerRUN)

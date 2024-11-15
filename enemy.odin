@@ -24,8 +24,8 @@ enemyAnimation :: struct {
 }
 
 enemyAnimations := map[string]enemyAnimation {
-	"RUN" = {{1}, {40,-40},{}},
-	"ATTACK" = {{1},{.6},{}}
+	"RUN" = {{1}, {20,-20},{}},
+	"ATTACK" = {{1},{5},{}}
 }
 
 updateEnemy :: proc() {
@@ -85,8 +85,7 @@ updateEnemy :: proc() {
 			case .IDLE:
 				ent.rotation = 0
 			case .ATTACK:
-				ent.rotation = 0
-				timerRun(&TIMERS[ent.id], .1, rl.GetTime(),&ent, enemyAttack)
+				timerRun(&TIMERS[ent.id], .01, rl.GetTime(),&ent, enemyAttack)
 			case .MOVE:
 				timerRun(&TIMERS[ent.id], f64(10-ent.speed)*.003, rl.GetTime(),&ent, enemyRUN)
 		}
@@ -96,6 +95,7 @@ updateEnemy :: proc() {
 
 
 enemyRUN :: proc(current_enemy : ^Enemy) {
+	current_enemy.texture.offset = {0,0}
 	if current_enemy.currentDir == 1 {
 		if enemyAnimations["RUN"].valB[0] > current_enemy.rotation {
 			current_enemy.rotation += 5
@@ -117,15 +117,23 @@ enemyRUN :: proc(current_enemy : ^Enemy) {
 }
 
 enemyAttack :: proc(ent : ^Enemy) {
-	// if ent.currentDir == 1 {
-	// 	if(ent.texture.offset.x < enemyAnimations["Attack"].valB[0]) {
-	// 		ent.texture.offset -= 1
-	// 	}
-	// } else if ent.currentDir == -1 {
-
-	// } else {
-	// 	ent.currentDir = enemyAnimations["Attack"].valA[0]
-	// }
+	ent.rotation = 0
+	if ent.currentDir == 1 {
+		//if distance between offset and pos is < than valB[0] then offset+=direction else dir= -1
+		if(calcDistance(ent.pos, ent.pos+ent.texture.offset) < enemyAnimations["ATTACK"].valB[0]) {
+			ent.texture.offset += ent.direction
+		} else {
+			ent.currentDir = -1
+		}
+	} else if ent.currentDir == -1 {
+		if(calcDistance(ent.pos, ent.pos+ent.texture.offset) > 0) {
+			ent.texture.offset -= ent.direction
+		} else {
+			ent.currentDir = 1
+		}
+	} else {
+		ent.currentDir = enemyAnimations["ATTACK"].valA[0]
+	}
 }
 
 enemySpawnLocation :[4]i32 = {1,2,3,4}

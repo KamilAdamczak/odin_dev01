@@ -38,11 +38,18 @@ LOOP_STATE_VALUES :: enum {
 TIMERS := map[string]f64 {}
 
 //UTILITY PROC
+calcDistance :: proc(pointA: Vec2f, pointB: Vec2f) -> f32 {
+	delta_x := pointB.x - pointA.x
+	delta_y := pointB.y - pointA.y
+
+	return math.sqrt(delta_x * delta_x + delta_y * delta_y)
+}
+
 calcDirection :: proc(pointA: Vec2f, pointB: Vec2f) -> Vec2f {
 	delta_x := pointB.x - pointA.x
 	delta_y := pointB.y - pointA.y
 
-	length := math.sqrt(delta_x * delta_x + delta_y * delta_y)
+	length := calcDistance(pointA, pointB)
 	if length == 0 {
 		return {0, 0}
 	}

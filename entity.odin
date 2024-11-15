@@ -4,15 +4,15 @@ import "core:fmt"
 import "core:slice"
 import rl "vendor:raylib"
 
-Entity :: struct {
-	pos:       Vec2f,
-	speed:     f32,
-	direction: Vec2f,
-	texture:   rl.Texture2D,
-	color:     rl.Color,
-	health:    int,
-	collider:  Collider,
-}
+// Entity :: struct {
+// 	pos:       Vec2f,
+// 	speed:     f32,
+// 	direction: Vec2f,
+// 	texture:   rl.Texture2D,
+// 	color:     rl.Color,
+// 	health:    int,
+// 	collider:  Collider,
+// }
 
 Collider :: struct {
 	type: ColliderType,
@@ -128,6 +128,7 @@ Sprite :: struct {
 	atlas_pos:     Vec2i,
 	texture_scale: Vec2i,
 	offset : Vec2f,
+	flip : bool
 }
 
 EntityMove :: proc(body: ^EntityAtlas) {
@@ -135,6 +136,11 @@ EntityMove :: proc(body: ^EntityAtlas) {
 		Vec2f{f32(body.direction.x), f32(body.direction.y)} *
 		body.speed *
 		f32(rl.GetFrameTime() * 100)
+	if body.direction.x < 0 {
+		body.texture.flip = true
+	} else if body.direction.x > 0 {
+		body.texture.flip = false
+	}
 }
 EntityFutureMove :: proc(body: EntityAtlas) -> EntityAtlas {
 	body := body
@@ -197,7 +203,7 @@ EntityDrawTint :: proc(ent: EntityAtlas, tint: rl.Color) {
 		{
 			f32(ent.texture.atlas_pos.x) * 16,
 			f32(ent.texture.atlas_pos.y) * 16,
-			ent.direction.x >= 0 ? f32(ent.texture.texture_scale.x) : -f32(ent.texture.texture_scale.x),
+			!ent.texture.flip ? f32(ent.texture.texture_scale.x) : -f32(ent.texture.texture_scale.x),
 			f32(ent.texture.texture_scale.y),
 		},
 		{f32(ent.pos.x)+ent.texture.offset.x, f32(ent.pos.y)+ent.texture.offset.y, 16.0, 16.0},

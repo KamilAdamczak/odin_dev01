@@ -18,7 +18,7 @@ Game_State :: struct {
 }
 
 g_Game_State := Game_State {
-	camera = rl.Camera2D{offset = {1280 / 2, 720 / 2}, zoom = 2},
+	camera = rl.Camera2D{offset = {1280 / 2, 720 / 2}, zoom = 4},
 	enemySpawnTime = 1,
 }
 
@@ -58,7 +58,7 @@ init :: proc() {
 		texture_scale = {16, 16},
 	}
 
-	g_Game_State.player.collider = SetCollider(.OVAL, Vec2f{15, 0})
+	g_Game_State.player.collider = SetCollider(.OVAL, Vec2f{10, 0})
 	g_Game_State.player.state = .IDLE
 	TIMERS["player"] = 0.0
 	//CAMERA

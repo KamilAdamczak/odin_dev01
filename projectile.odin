@@ -25,7 +25,7 @@ spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
 			direction = direction,
 			id = genRandString(20)
 		},
-		dmg = 10,
+		dmg = 0,
 	}
 	projectile.collider = SetCollider(.OVAL, Vec2f{4.0, 0.0})
 	projectile.particleEmitter = createParticleEmmiter(projectile.pos, projectile.direction, 1.0, projectile.texture, 100000000)
