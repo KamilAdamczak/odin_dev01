@@ -77,6 +77,9 @@ init :: proc() {
 }
 
 update :: proc() {
+
+	g_Game_State.camera.zoom += rl.GetMouseWheelMove()/10
+	g_Game_State.camera.zoom = rl.Clamp(g_Game_State.camera.zoom, 1,5)
 	timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
 
 	//PLAYER
@@ -85,8 +88,14 @@ update :: proc() {
 	//Projectiles
 	updateProjectiles()
 	if len(g_Game_State.enemy) > 0 && plater_attack {
-		timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(),proc() {
+		timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(), proc() {
 			closesEnemy := g_Game_State.enemy[0]
+			old_cc := math.sqrt(
+				(abs(closesEnemy.pos.x - g_Game_State.player.pos.x) *
+					abs(closesEnemy.pos.x - g_Game_State.player.pos.x)) +
+				(abs(closesEnemy.pos.y - g_Game_State.player.pos.y) *
+						abs(closesEnemy.pos.y - g_Game_State.player.pos.y)),
+			)
 			for ent in g_Game_State.enemy {
 				new_cc := math.sqrt(
 					(abs(ent.pos.x - g_Game_State.player.pos.x) *
@@ -94,14 +103,9 @@ update :: proc() {
 					(abs(ent.pos.y - g_Game_State.player.pos.y) *
 							abs(ent.pos.y - g_Game_State.player.pos.y)),
 				)
-				old_cc := math.sqrt(
-					(abs(closesEnemy.pos.x - g_Game_State.player.pos.x) *
-						abs(closesEnemy.pos.x - g_Game_State.player.pos.x)) +
-					(abs(closesEnemy.pos.y - g_Game_State.player.pos.y) *
-							abs(closesEnemy.pos.y - g_Game_State.player.pos.y)),
-				)
 				if new_cc < old_cc {
 					closesEnemy = ent
+					old_cc = new_cc
 				}
 			}
 			spawProjectile(

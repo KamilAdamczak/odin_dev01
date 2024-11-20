@@ -10,6 +10,7 @@ Enemy :: struct {
 	projectiles : [dynamic]Projectile,
 	state : enemyState,
 	currentDir : int,
+	attackSpeed : f64,
 }
 
 enemyState :: enum {
@@ -87,6 +88,7 @@ updateEnemy :: proc() {
 		switch ent.state {
 			case .IDLE:
 				ent.rotation = 0
+				TIMERS[combine({ent.id,"ATTACK"})] = 0.0
 			case .ATTACK:
 				timerRun(&TIMERS[ent.id], .01, rl.GetTime(),&ent, enemyAttack)
 			case .MOVE:
@@ -121,7 +123,7 @@ enemyRUN :: proc(current_enemy : ^Enemy) {
 
 enemyAttack :: proc(ent : ^Enemy) {
 	ent.rotation = 0
-	fmt.println(calcDistance(ent.pos, ent.pos+ent.texture.offset))
+	timerRun(&TIMERS[combine({ent.id,"ATTACK"})], ent.attackSpeed, rl.GetTime(),proc() {g_Game_State.player.currentHP-=1})
 	if(calcDistance(ent.pos, ent.pos+ent.texture.offset) > enemyAnimations["ATTACK"].valB[0]) {
 		ent.currentDir = -1	
 	} else if(calcDistance(ent.pos, ent.pos+ent.texture.offset) <= 0) {
@@ -163,10 +165,12 @@ spawnEnemy :: proc() {
 			id = genRandString(10)
 		},
 		projectiles = [dynamic]Projectile{},
-		state = .IDLE
+		state = .IDLE,
+		attackSpeed = .5
 	}
 	enemy.collider = SetCollider(.OVAL, Vec2f{3, 0})
 	append(&g_Game_State.enemy, enemy)
 	TIMERS[enemy.id] = 0.0
+	TIMERS[combine({enemy.id,"ATTACK"})] = 0.0
 	spawnCount += 1
 }
