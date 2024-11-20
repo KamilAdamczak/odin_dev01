@@ -8,6 +8,8 @@ Player :: struct {
 	attackSpeed: f64,
 	state : playerState,
 	currentDir : int,
+	maxHP : f32,
+	currentHP: f32,
 }
 
 playerState :: enum {
@@ -25,7 +27,7 @@ playerAnimations := map[string]playerAnimation {
 	"RUN" = {1, 30,-30},
 }
 
-playerMove :: proc() {
+playerUpdate :: proc() {
 	if rl.IsKeyDown(.A) {
 		g_Game_State.player.direction.x = -1
 	}
@@ -87,4 +89,33 @@ playerRUN :: proc() {
 		g_Game_State.player.currentDir = playerAnimations["RUN"].startDir
 	}
 	
+}
+
+playerDrawHealth :: proc() {
+	rl.DrawTexturePro(
+		g_Game_State.whiteSquareTexture.texture ,
+		{
+			f32(g_Game_State.whiteSquareTexture.atlas_pos.x) * 16,
+			f32(g_Game_State.whiteSquareTexture.atlas_pos.y) * 16,
+			f32(g_Game_State.whiteSquareTexture.texture_scale.x),
+			f32(g_Game_State.whiteSquareTexture.texture_scale.y),
+		},
+		{f32(g_Game_State.player.pos.x), f32(g_Game_State.player.pos.y)+10, (1)*100*.2, 2.0},
+		{10, 0},
+		0.0,
+		rl.BLACK,
+	)
+	rl.DrawTexturePro(
+		g_Game_State.whiteSquareTexture.texture ,
+		{
+			f32(g_Game_State.whiteSquareTexture.atlas_pos.x) * 16,
+			f32(g_Game_State.whiteSquareTexture.atlas_pos.y) * 16,
+			f32(g_Game_State.whiteSquareTexture.texture_scale.x),
+			f32(g_Game_State.whiteSquareTexture.texture_scale.y),
+		},
+		{f32(g_Game_State.player.pos.x), f32(g_Game_State.player.pos.y)+10, (g_Game_State.player.currentHP/g_Game_State.player.maxHP)*100*.2, 2.0},
+		{10, 0},
+		0.0,
+		rl.GREEN,
+	)
 }

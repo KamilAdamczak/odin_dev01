@@ -15,18 +15,19 @@ Game_State :: struct {
 	projectiles:    [dynamic]Projectile,
 	assets:         map[string]rl.Texture2D,
 	particleEmmiters : [dynamic]ParticleEmitter,
+	whiteSquareTexture : Sprite
 }
 
 g_Game_State := Game_State {
-	camera = rl.Camera2D{offset = {1280 / 2, 720 / 2}, zoom = 4},
+	camera = rl.Camera2D{offset = {1280 / 2, 720 / 2}, zoom = 2},
 	enemySpawnTime = 1,
 }
 
 camera := &g_Game_State.camera
 
 spawnCount := 1
-
 DRAW_SHADOWS := true
+plater_attack := true
 
 init :: proc() {
 	sFPS.show = true
@@ -35,6 +36,8 @@ init :: proc() {
 	g_Game_State.assets = {
 		"atlas" = rl.LoadTexture("./assets/atlas.png"),
 	}
+	
+	g_Game_State.whiteSquareTexture = createSprite(g_Game_State.assets["atlas"], {1,2})
 
 	//WINDOW ICON
 	icon: rl.Image
@@ -60,6 +63,8 @@ init :: proc() {
 
 	g_Game_State.player.collider = SetCollider(.OVAL, Vec2f{10, 0})
 	g_Game_State.player.state = .IDLE
+	g_Game_State.player.maxHP = 10
+	g_Game_State.player.currentHP = g_Game_State.player.maxHP
 	TIMERS["player"] = 0.0
 	//CAMERA
 	camera.target = g_Game_State.player.pos
@@ -67,17 +72,19 @@ init :: proc() {
 	//INIT TIMERS
 	TIMERS["one"] = 0.0
 	TIMERS["two"] = 0.0
+
+	// spawnEnemy()
 }
 
 update :: proc() {
 	timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
 
 	//PLAYER
-	playerMove()
+	playerUpdate()
 	
 	//Projectiles
 	updateProjectiles()
-	if len(g_Game_State.enemy) > 0 {
+	if len(g_Game_State.enemy) > 0 && plater_attack {
 		timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(),proc() {
 			closesEnemy := g_Game_State.enemy[0]
 			for ent in g_Game_State.enemy {
@@ -129,6 +136,10 @@ update :: proc() {
 		ParticleEmitterUpdate(&emitter)
 	}
 
+	if rl.IsKeyPressed(.Y) {
+		plater_attack = !plater_attack
+	}
+
 	camera.offset = {f32(rl.GetScreenWidth()/2), f32(rl.GetScreenHeight()/2)}
 	camera.target = g_Game_State.player.pos
 }
@@ -165,22 +176,27 @@ draw :: proc() {
 		ParticleEmitterDraw(emitter)
 	}
 	delete(entitySort)
+
+	//Before everything else
+	playerDrawHealth()
 }
 
 drawGui :: proc() {
-	// rl.DrawText(rl.TextFormat("%f", rl.GetFrameTime()), i32(10), i32(120), 20, rl.WHITE)
-	
-	// rl.DrawText(
-	// 	rl.TextFormat(
-	// 		"Next Spawn: %f",
-	// 		TIMERS["one"] + g_Game_State.enemySpawnTime - rl.GetTime(),
-	// 	),
-	// 	i32(10),
-	// 	i32(170),
-	// 	30,
-	// 	rl.WHITE,
-	// )
-	
-	// rl.DrawText(rl.TextFormat("Entities: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
-	// rl.DrawText(rl.TextFormat("Player State: %i", g_Game_State.player.state), i32(10), i32(240), 30, rl.WHITE)
+	if rl.IsKeyDown(.TAB) {
+		rl.DrawText(rl.TextFormat("%f", rl.GetFrameTime()), i32(10), i32(120), 20, rl.WHITE)
+		
+		rl.DrawText(
+			rl.TextFormat(
+				"Next Spawn: %f",
+				TIMERS["one"] + g_Game_State.enemySpawnTime - rl.GetTime(),
+			),
+			i32(10),
+			i32(170),
+			30,
+			rl.WHITE,
+		)
+		
+		rl.DrawText(rl.TextFormat("Entities: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
+		rl.DrawText(rl.TextFormat("Player State: %i", g_Game_State.player.state), i32(10), i32(240), 30, rl.WHITE)
+	}
 }

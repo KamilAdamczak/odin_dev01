@@ -14,11 +14,12 @@ Particle :: struct {
     life : f32,
     size : f32,
     alpha : u8,
-    speed : f32
+    color : rl.Color,
+    speed : f32,
 }
 
-createParticle :: proc(pos : Vec2f, dir : Vec2f, sprite : Sprite, life : f32, size : f32 = 1) -> Particle{
-    return Particle {pos, dir, sprite, life, size, 0, 0}
+createParticle :: proc(pos : Vec2f, dir : Vec2f, sprite : Sprite, life : f32, size : f32 = 1, color : rl.Color) -> Particle{
+    return Particle {pos, dir, sprite, life, size, 0, color,0}
 }
 
 ParticleEmitter :: struct {
@@ -30,7 +31,9 @@ ParticleEmitter :: struct {
     particles : [dynamic] Particle,
     emissionType : EmittType,
     emissionShape : EmittShape,
+    emissionColor : rl.Color,
     id : string,
+    
 }
 
 EmittType :: enum {
@@ -45,7 +48,7 @@ EmittShape :: enum {
 	C,
 }
 
-createParticleEmmiter :: proc(pos : Vec2f, emmisionDirection: Vec2f, emmisionPower : f32, sprite : Sprite, emmisionLife : f32, emissiontype : EmittType = .TRAIL, emissionshape : EmittShape = nil) -> ParticleEmitter {
+createParticleEmmiter :: proc(pos : Vec2f, emmisionDirection: Vec2f, emmisionPower : f32, sprite : Sprite, emmisionLife : f32, emissiontype : EmittType = .TRAIL, emissionColor : rl.Color = rl.WHITE, emissionshape : EmittShape = nil) -> ParticleEmitter {
     // rand.reset(u64(emmisionDirection.x*emmisionDirection.y+f32(rl.GetTime())*f32(rl.GetRandomValue(0,100))))
     id := genRandString(10)
     TIMERS[id] = 0.0
@@ -56,7 +59,7 @@ createParticleEmmiter :: proc(pos : Vec2f, emmisionDirection: Vec2f, emmisionPow
         emissionshaper = emissionshape
     }
     // TIMERS[string(id)] = 1.0
-    return ParticleEmitter {pos, emmisionDirection, emmisionPower, sprite, emmisionLife, {}, emissiontype, emissionshaper,id}
+    return ParticleEmitter {pos, emmisionDirection, emmisionPower, sprite, emmisionLife, {}, emissiontype, emissionshaper,emissionColor,id}
 }
 
 destroyGlobalParticleEmmiter :: proc(gameState : ^Game_State ,particleEmmiter : ^ParticleEmitter) {
@@ -85,7 +88,7 @@ ParticleEmitterUpdate :: proc(particleEmitter : ^ParticleEmitter) {
             particleEmitter.pos, 
             -particleEmitter.emmisionDirection,
             particleEmitter.sprite,
-            particleEmitter.emmisionLife))
+            particleEmitter.emmisionLife, 1, particleEmitter.emissionColor))
         for &particle, index in particleEmitter.particles {
             particle.size -= 5 * rl.GetFrameTime()
             // particle.life -= .1
@@ -100,7 +103,7 @@ ParticleEmitterUpdate :: proc(particleEmitter : ^ParticleEmitter) {
                 -particleEmitter.emmisionDirection,
                 particleEmitter.sprite,
                 particleEmitter.emmisionLife,
-                .7))
+                .7, particleEmitter.emissionColor))
         }
 
         for &particle, index in particleEmitter.particles {
@@ -157,7 +160,7 @@ ParticleEmitterDraw :: proc(particleEmitter : ParticleEmitter) {
                 {f32(particle.pos.x), f32(particle.pos.y), f32(particle.sprite.texture_scale.x)*particle.size, f32(particle.sprite.texture_scale.y)*particle.size},
                 {8, 8}*particle.size,
                 0.0,
-                rl.WHITE - {0,0,0,particle.alpha},
+                particle.color - {0,0,0,particle.alpha},
             )
     }
 }

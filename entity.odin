@@ -123,14 +123,6 @@ EntityAtlas :: struct {
 	rotation:  f32,
 }
 
-Sprite :: struct {
-	texture:       rl.Texture2D,
-	atlas_pos:     Vec2i,
-	texture_scale: Vec2i,
-	offset : Vec2f,
-	flip : bool
-}
-
 EntityMove :: proc(body: ^EntityAtlas) {
 	body.pos +=
 		Vec2f{f32(body.direction.x), f32(body.direction.y)} *

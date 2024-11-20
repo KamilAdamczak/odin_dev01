@@ -28,6 +28,7 @@ enemyAnimations := map[string]enemyAnimation {
 	"ATTACK" = {{1},{5},{}}
 }
 
+
 updateEnemy :: proc() {
 	for &ent, index in g_Game_State.enemy {
 		if ent.health <= 0 {
@@ -41,7 +42,7 @@ updateEnemy :: proc() {
 				if(!hasID(ent.projectiles, projectile)) {
 					projectile.health -= 1
 					ent.health -= projectile.dmg
-					append(&g_Game_State.particleEmmiters, createParticleEmmiter(ent.pos,{-1, -1},1, projectile.texture, 4, .EXPLOSION))
+					append(&g_Game_State.particleEmmiters, createParticleEmmiter(ent.pos,{-1, -1},1, {texture = g_Game_State.assets["atlas"],	atlas_pos = {1, 1},	texture_scale = {16, 16},}, 4, .EXPLOSION, ent.color))
 					append(&ent.projectiles, projectile)
 				}
 			}
@@ -70,7 +71,9 @@ updateEnemy :: proc() {
 		}
 		if checkCollision(ent, g_Game_State.player) {
 			collision = true
+			
 			ent.state = .ATTACK
+			
 		}
 		if !collision {
 			EntityMove(&ent)
@@ -118,22 +121,14 @@ enemyRUN :: proc(current_enemy : ^Enemy) {
 
 enemyAttack :: proc(ent : ^Enemy) {
 	ent.rotation = 0
-	if ent.currentDir == 1 {
-		//if distance between offset and pos is < than valB[0] then offset+=direction else dir= -1
-		if(calcDistance(ent.pos, ent.pos+ent.texture.offset) < enemyAnimations["ATTACK"].valB[0]) {
-			ent.texture.offset += ent.direction
-		} else {
-			ent.currentDir = -1
-		}
-	} else if ent.currentDir == -1 {
-		if(calcDistance(ent.pos, ent.pos+ent.texture.offset) > 0) {
-			ent.texture.offset -= ent.direction
-		} else {
-			ent.currentDir = 1
-		}
-	} else {
-		ent.currentDir = enemyAnimations["ATTACK"].valA[0]
-	}
+	fmt.println(calcDistance(ent.pos, ent.pos+ent.texture.offset))
+	if(calcDistance(ent.pos, ent.pos+ent.texture.offset) > enemyAnimations["ATTACK"].valB[0]) {
+		ent.currentDir = -1	
+	} else if(calcDistance(ent.pos, ent.pos+ent.texture.offset) <= 0) {
+		ent.currentDir = 1
+	} 
+	ent.texture.offset += ent.direction * f32(ent.currentDir)
+	//error when enemy starto moving in wierd dir is caused becouse direction is calculated wrongly maybe player can push enemies?\
 }
 
 enemySpawnLocation :[4]i32 = {1,2,3,4}

@@ -6,6 +6,7 @@ import "core:strconv"
 import "core:fmt"
 import "core:strings"
 import "core:math/rand"
+import rl "vendor:raylib"
 
 //GLOBALS VALUES
 WORLD_WIDTH :: 1
@@ -33,6 +34,18 @@ LOOP_STATE_VALUES :: enum {
 	DRAW_SHADOWS,
 	DRAW_SPRITES,
 	DRAW_GUI,
+}
+
+Sprite :: struct {
+	texture:       rl.Texture2D,
+	atlas_pos:     Vec2i,
+	texture_scale: Vec2i,
+	offset : Vec2f,
+	flip : bool
+}
+
+createSprite :: proc(texture : rl.Texture2D, atlas_pos : Vec2i = {0,0}, texture_scale: Vec2i = {16,16}, offset : Vec2f = {0,0}, flip : bool = false) -> Sprite {
+	return Sprite {texture, atlas_pos, texture_scale, offset, flip}
 }
 
 TIMERS := map[string]f64 {}
