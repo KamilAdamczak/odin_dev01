@@ -6,7 +6,7 @@ import "core:math/rand"
 import "core:strings"
 
 Enemy :: struct {
-	using ent: EntityAtlas,
+	using ent: Entity,
 	projectiles : [dynamic]Projectile,
 	state : enemyState,
 	currentDir : int,
@@ -29,10 +29,11 @@ enemyAnimations := map[string]enemyAnimation {
 	"ATTACK" = {{1},{5},{}}
 }
 
-
 updateEnemy :: proc() {
 	for &ent, index in g_Game_State.enemy {
 		if ent.health <= 0 {
+			delete_key(&TIMERS, ent.id)
+			delete_key(&TIMERS, combine({ent.id,"ATTACK"}))
 			ordered_remove(&g_Game_State.enemy, index)
 			spawnCount -= 1
 			continue
@@ -43,6 +44,7 @@ updateEnemy :: proc() {
 				if(!hasID(ent.projectiles, projectile)) {
 					projectile.health -= 1
 					ent.health -= projectile.dmg
+					// projectile.direction = calcDirection(projectile.pos, rand.choice(g_Game_State.enemy[:]).pos) 
 					append(&g_Game_State.particleEmmiters, createParticleEmmiter(ent.pos,{-1, -1},1, {texture = g_Game_State.assets["atlas"],	atlas_pos = {1, 1},	texture_scale = {16, 16},}, 4, .EXPLOSION, ent.color))
 					append(&ent.projectiles, projectile)
 				}
@@ -98,7 +100,6 @@ updateEnemy :: proc() {
 	}
 }
 
-
 enemyRUN :: proc(current_enemy : ^Enemy) {
 	current_enemy.texture.offset = {0,0}
 	if current_enemy.currentDir == 1 {
@@ -147,7 +148,7 @@ spawnEnemy :: proc() {
 			spawnLocation = {f32(rl.GetRandomValue(-rl.GetScreenWidth()/2, rl.GetScreenWidth()/2)), f32(-rl.GetScreenHeight()/2)}
 	}
 	enemy := Enemy {
-		ent = EntityAtlas {
+		ent = Entity {
 			pos = g_Game_State.player.pos + (spawnLocation*0.5),
 			texture = Sprite {
 				texture = g_Game_State.assets["atlas"],

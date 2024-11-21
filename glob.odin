@@ -44,6 +44,11 @@ Sprite :: struct {
 	flip : bool
 }
 
+Circle :: struct {
+	center: rl.Vector2,
+	r:      f32,
+}
+
 createSprite :: proc(texture : rl.Texture2D, atlas_pos : Vec2i = {0,0}, texture_scale: Vec2i = {16,16}, offset : Vec2f = {0,0}, flip : bool = false) -> Sprite {
 	return Sprite {texture, atlas_pos, texture_scale, offset, flip}
 }
@@ -72,7 +77,7 @@ calcDirection :: proc(pointA: Vec2f, pointB: Vec2f) -> Vec2f {
 	return {direction_x, direction_y}
 }
 
-getIndex :: proc(array: [dynamic]EntityAtlas, object: Enemy) -> int {
+getIndex :: proc(array: [dynamic]Entity, object: Enemy) -> int {
 	for index in 00 ..< len(array) {
 		if array[index] == object.ent {
 			return index
@@ -162,4 +167,34 @@ getTileVec2i :: proc(worldPos: Vec2i) -> ^Tile {
 	y := worldPos.y
 
 	return getTile(x, y)
+}
+
+closesTarget :: proc(arrayOfObjects : [dynamic]Entity, mainObject : Entity) -> (cTarget : Entity) {
+	cTarget = arrayOfObjects[0]
+			old_cc := math.sqrt(
+				(abs(cTarget.pos.x - mainObject.pos.x) *
+					abs(cTarget.pos.x - mainObject.pos.x)) +
+				(abs(cTarget.pos.y - mainObject.pos.y) *
+						abs(cTarget.pos.y - mainObject.pos.y)),
+			)
+			for ent in arrayOfObjects {
+				new_cc := math.sqrt(
+					(abs(ent.pos.x - mainObject.pos.x) *
+						abs(ent.pos.x - mainObject.pos.x)) +
+					(abs(ent.pos.y - mainObject.pos.y) *
+							abs(ent.pos.y - mainObject.pos.y)),
+				)
+				if new_cc < old_cc {
+					cTarget = ent
+					old_cc = new_cc
+				}
+			}
+	return cTarget
+}
+
+childToParent::proc(child : $T) -> (parent : [dynamic]Entity) {
+	for ent in child {
+		append(&parent, ent.ent)
+	}
+	return parent
 }

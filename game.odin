@@ -19,7 +19,10 @@ Game_State :: struct {
 }
 
 g_Game_State := Game_State {
-	camera = rl.Camera2D{offset = {1280 / 2, 720 / 2}, zoom = 2},
+	camera = rl.Camera2D{
+		offset = {1280 / 2, 720 / 2}, 
+		zoom = 2
+	},
 	enemySpawnTime = 1,
 }
 
@@ -36,129 +39,118 @@ init :: proc() {
 	g_Game_State.assets = {
 		"atlas" = rl.LoadTexture("./assets/atlas.png"),
 	}
-	
+
 	g_Game_State.whiteSquareTexture = createSprite(g_Game_State.assets["atlas"], {1,2})
 
-	//WINDOW ICON
-	icon: rl.Image
-	icon = rl.LoadImageFromTexture(g_Game_State.assets["atlas"])
-	icon = rl.ImageFromImage(icon, {0.0, 32.0, 16.0, 16.0})
-	rl.SetWindowIcon(icon)
-
-	//PLAYER
-	g_Game_State.player.ent = EntityAtlas {
-		pos    = {1280 / 2, 720 / 2},
-		speed  = 2,
-		health = 100,
-		color  = rl.WHITE,
+	
+	{ //WINDOW ICON
+		icon: rl.Image
+		icon = rl.LoadImageFromTexture(g_Game_State.assets["atlas"])
+		icon = rl.ImageFromImage(icon, {0.0, 32.0, 16.0, 16.0})
+		rl.SetWindowIcon(icon)
 	}
 
-	g_Game_State.player.attackSpeed = 1.5
+	
+	{ //PLAYER
+		g_Game_State.player.ent = Entity {
+			pos    = {1280 / 2, 720 / 2},
+			speed  = 2,
+			health = 100,
+			color  = rl.WHITE,
+		}
 
-	g_Game_State.player.texture = Sprite {
-		texture       = g_Game_State.assets["atlas"],
-		atlas_pos     = {0, 2},
-		texture_scale = {16, 16},
+		g_Game_State.player.attackSpeed = 1
+
+		g_Game_State.player.texture = Sprite {
+			texture       = g_Game_State.assets["atlas"],
+			atlas_pos     = {0, 2},
+			texture_scale = {16, 16},
+		}
+
+		g_Game_State.player.collider = SetCollider(.OVAL, Vec2f{10, 0})
+		g_Game_State.player.state = .IDLE
+		g_Game_State.player.maxHP = 10
+		g_Game_State.player.currentHP = g_Game_State.player.maxHP
+		TIMERS["player"] = 0.0
 	}
 
-	g_Game_State.player.collider = SetCollider(.OVAL, Vec2f{10, 0})
-	g_Game_State.player.state = .IDLE
-	g_Game_State.player.maxHP = 10
-	g_Game_State.player.currentHP = g_Game_State.player.maxHP
-	TIMERS["player"] = 0.0
-	//CAMERA
-	camera.target = g_Game_State.player.pos
-
-	//INIT TIMERS
+	
+	{ //CAMERA
+		camera.target = g_Game_State.player.pos
+	}
+	
+	{ //INIT TIMERS
 	TIMERS["one"] = 0.0
 	TIMERS["two"] = 0.0
-
-	// spawnEnemy()
+	}
 }
 
+/* ///////////////////////////////////////////////////////////////////////////////////////////
+										UPDATE
+////////////////////////////////////////////////////////////////////////////////////////// */
 update :: proc() {
+	{//PLAYER
+		playerUpdate()
+	}
 
-	g_Game_State.camera.zoom += rl.GetMouseWheelMove()/10
-	g_Game_State.camera.zoom = rl.Clamp(g_Game_State.camera.zoom, 1,5)
-	timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
+	{//Projectiles
+		updateProjectiles()
+		if len(g_Game_State.enemy) > 0 && plater_attack {
+			timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(), proc() {
+				spawnProjectile(g_Game_State.player.ent.pos,calcDirection(g_Game_State.player.pos, closesTarget(childToParent(g_Game_State.enemy), g_Game_State.player).pos))
+			})
+		}
+	}
 
-	//PLAYER
-	playerUpdate()
-	
-	//Projectiles
-	updateProjectiles()
-	if len(g_Game_State.enemy) > 0 && plater_attack {
-		timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(), proc() {
-			closesEnemy := g_Game_State.enemy[0]
-			old_cc := math.sqrt(
-				(abs(closesEnemy.pos.x - g_Game_State.player.pos.x) *
-					abs(closesEnemy.pos.x - g_Game_State.player.pos.x)) +
-				(abs(closesEnemy.pos.y - g_Game_State.player.pos.y) *
-						abs(closesEnemy.pos.y - g_Game_State.player.pos.y)),
+	{//ENEMY
+		timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
+		updateEnemy()
+	}
+
+	{//PARTICLE EMMITTERS
+		for &emitter in g_Game_State.particleEmmiters {
+			ParticleEmitterUpdate(&emitter)
+		}
+	}
+
+	{//DEBUG
+		if rl.IsKeyPressed(.SPACE) {
+			DRAW_COLLIDERS = !DRAW_COLLIDERS
+		}
+
+		if rl.IsKeyPressed(.R) {
+			fmt.println(
+				"enemies count: ",
+				len(g_Game_State.enemy),
+				"projectiles count:	",
+				len(g_Game_State.projectiles),
 			)
-			for ent in g_Game_State.enemy {
-				new_cc := math.sqrt(
-					(abs(ent.pos.x - g_Game_State.player.pos.x) *
-						abs(ent.pos.x - g_Game_State.player.pos.x)) +
-					(abs(ent.pos.y - g_Game_State.player.pos.y) *
-							abs(ent.pos.y - g_Game_State.player.pos.y)),
-				)
-				if new_cc < old_cc {
-					closesEnemy = ent
-					old_cc = new_cc
-				}
-			}
-			spawProjectile(
-				g_Game_State.player.ent.pos,
-				calcDirection(g_Game_State.player.pos, closesEnemy.pos),
-			)
-		})
+		}
+
+		if rl.IsKeyPressed(.T) {
+			DRAW_SHADOWS = !DRAW_SHADOWS
+		}
+
+		if rl.IsKeyPressed(.Y) {
+			plater_attack = !plater_attack
+		}
 	}
 
-	//ENEMY
-	updateEnemy()
-
-	//DEBUG
-	if rl.IsKeyPressed(.SPACE) {
-		DRAW_COLLIDERS = !DRAW_COLLIDERS
-	}
-
-	if rl.IsKeyPressed(.R) {
-		fmt.println(
-			"enemies count: ",
-			len(g_Game_State.enemy),
-			"projectiles count:	",
-			len(g_Game_State.projectiles),
-		)
-	}
-
-	if rl.IsKeyPressed(.T) {
-		DRAW_SHADOWS = !DRAW_SHADOWS
-	}
-
-	for &emitter in g_Game_State.particleEmmiters {
-		ParticleEmitterUpdate(&emitter)
-	}
-
-	if rl.IsKeyPressed(.Y) {
-		plater_attack = !plater_attack
-	}
-
+	{ //CAMERA
 	camera.offset = {f32(rl.GetScreenWidth()/2), f32(rl.GetScreenHeight()/2)}
 	camera.target = g_Game_State.player.pos
-}
-
-childToParent::proc(child : $T) -> (parent : [dynamic]EntityAtlas) {
-	for ent in child {
-		append(&parent, ent.ent)
+	camera.zoom += rl.GetMouseWheelMove()/10
+	camera.zoom = rl.Clamp(g_Game_State.camera.zoom, 1,5)
 	}
-	return parent
 }
 
+/* ///////////////////////////////////////////////////////////////////////////////////////////
+										DRAW
+////////////////////////////////////////////////////////////////////////////////////////// */
 draw :: proc() {
 	entitySort := EntitySort(
 		{g_Game_State.player},
-		[dynamic][dynamic]EntityAtlas{childToParent(g_Game_State.enemy) , childToParent(g_Game_State.projectiles)},
+		[dynamic][dynamic]Entity{childToParent(g_Game_State.enemy) , childToParent(g_Game_State.projectiles)},
 	)
 
 	if DRAW_SHADOWS {

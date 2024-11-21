@@ -4,7 +4,7 @@ import rl "vendor:raylib"
 import "core:fmt"
 
 Player :: struct {
-	using ent:   EntityAtlas,
+	using ent:   Entity,
 	attackSpeed: f64,
 	state : playerState,
 	currentDir : int,

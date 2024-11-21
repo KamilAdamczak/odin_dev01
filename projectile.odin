@@ -5,27 +5,27 @@ import "core:fmt"
 import "core:math/rand"
 
 Projectile :: struct {
-	using ent: EntityAtlas,
+	using ent: Entity,
 	dmg:       int,
 	particleEmitter : ParticleEmitter
 }
 
-spawProjectile :: proc(position: Vec2f, direction: Vec2f) {
+spawnProjectile :: proc(position: Vec2f, direction: Vec2f) {
 	projectile := Projectile {
-		ent = EntityAtlas {
-			pos = g_Game_State.player.pos,
+		ent = Entity {
+			pos = position,
 			texture = Sprite {
 				texture = g_Game_State.assets["atlas"],
 				atlas_pos = {0, 1},
 				texture_scale = {16, 16},
 			},
-			health = 1,
+			health = 3,
 			speed = 3,
 			color = rl.WHITE,
 			direction = direction,
 			id = genRandString(20)
 		},
-		dmg = 10,
+		dmg = 20,
 	}
 	projectile.collider = SetCollider(.OVAL, Vec2f{4.0, 0.0})
 	projectile.particleEmitter = createParticleEmmiter(projectile.pos, projectile.direction, 1.0, projectile.texture, 100000000)
@@ -47,5 +47,6 @@ updateProjectiles :: proc() {
 		projectile.particleEmitter.pos = projectile.pos
 		ParticleEmitterUpdate(&projectile.particleEmitter)
 		ParticleEmitterDraw(projectile.particleEmitter)
+		// projectile.direction = calcDirection(projectile.pos, closesTarget(childToParent(g_Game_State.enemy), projectile).pos)
 	}
 }

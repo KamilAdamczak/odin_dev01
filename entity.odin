@@ -4,23 +4,30 @@ import "core:fmt"
 import "core:slice"
 import rl "vendor:raylib"
 
-// Entity :: struct {
-// 	pos:       Vec2f,
-// 	speed:     f32,
-// 	direction: Vec2f,
-// 	texture:   rl.Texture2D,
-// 	color:     rl.Color,
-// 	health:    int,
-// 	collider:  Collider,
-// }
+Entity :: struct {
+	pos:       Vec2f,
+	speed:     f32,
+	direction: Vec2f,
+	texture:   Sprite,
+	color:     rl.Color,
+	health:    int,
+	collider:  Collider,
+	id:        string,
+	rotation:  f32,
+}
 
 Collider :: struct {
 	type: ColliderType,
 	size: Vec2f,
 }
 
+ColliderType :: enum {
+	BOX,
+	RECT,
+	OVAL,
+}
 
-getColliderRect :: proc(ent: EntityAtlas) -> rl.Rectangle {
+getColliderRect :: proc(ent: Entity) -> rl.Rectangle {
 	rect := rl.Rectangle {
 		f32(ent.pos.x) - f32(ent.texture.texture_scale.x) / 2,
 		f32(ent.pos.y) - f32(ent.texture.texture_scale.y) / 2,
@@ -30,12 +37,12 @@ getColliderRect :: proc(ent: EntityAtlas) -> rl.Rectangle {
 	return rect
 }
 
-getColliderCircle :: proc(ent: EntityAtlas) -> Circle {
+getColliderCircle :: proc(ent: Entity) -> Circle {
 	circ := Circle{rl.Vector2{ent.pos.x, ent.pos.y}, ent.collider.size.x}
 	return circ
 }
 
-checkCollision :: proc(entA: EntityAtlas, entB: EntityAtlas) -> bool {
+checkCollision :: proc(entA: Entity, entB: Entity) -> bool {
 	switch entA.collider.type {
 	case .OVAL:
 		switch entB.collider.type {
@@ -68,12 +75,7 @@ checkCollision :: proc(entA: EntityAtlas, entB: EntityAtlas) -> bool {
 	return false
 }
 
-Circle :: struct {
-	center: rl.Vector2,
-	r:      f32,
-}
-
-SetColliderEnt :: proc(type: ColliderType, ent: EntityAtlas) -> Collider {
+SetColliderEnt :: proc(type: ColliderType, ent: Entity) -> Collider {
 	col: Collider
 	col.type = type
 	switch type {
@@ -105,25 +107,7 @@ SetCollider :: proc {
 	SetColliderSize,
 }
 
-ColliderType :: enum {
-	BOX,
-	RECT,
-	OVAL,
-}
-
-EntityAtlas :: struct {
-	pos:       Vec2f,
-	speed:     f32,
-	direction: Vec2f,
-	texture:   Sprite,
-	color:     rl.Color,
-	health:    int,
-	collider:  Collider,
-	id:        string,
-	rotation:  f32,
-}
-
-EntityMove :: proc(body: ^EntityAtlas) {
+EntityMove :: proc(body: ^Entity) {
 	body.pos +=
 		Vec2f{f32(body.direction.x), f32(body.direction.y)} *
 		body.speed *
@@ -134,7 +118,8 @@ EntityMove :: proc(body: ^EntityAtlas) {
 		body.texture.flip = false
 	}
 }
-EntityFutureMove :: proc(body: EntityAtlas) -> EntityAtlas {
+
+EntityFutureMove :: proc(body: Entity) -> Entity {
 	body := body
 	body.pos +=
 		Vec2f{f32(body.direction.x), f32(body.direction.y)} *
@@ -148,7 +133,7 @@ EntityDraw :: proc {
 	EntityDrawTint,
 }
 
-EntityDrawNormal :: proc(ent: EntityAtlas) {
+EntityDrawNormal :: proc(ent: Entity) {
 	// rl.DrawTextureEx(ent.texture, ent.pos, 0.0, camera.zoom, rl.WHITE)
 	rl.DrawTexturePro(
 		ent.texture.texture,
@@ -165,7 +150,7 @@ EntityDrawNormal :: proc(ent: EntityAtlas) {
 	)
 }
 
-EntityDrawTint :: proc(ent: EntityAtlas, tint: rl.Color) {
+EntityDrawTint :: proc(ent: Entity, tint: rl.Color) {
 	if DRAW_COLLIDERS && LOOP_STATE == .DRAW_SPRITES {
 		switch ent.collider.type {
 		case .BOX:
@@ -205,10 +190,7 @@ EntityDrawTint :: proc(ent: EntityAtlas, tint: rl.Color) {
 	)
 }
 
-EntitySortList :: proc(
-	arrayOfEntities: [dynamic]EntityAtlas,
-	arrayOfArrays: [dynamic][dynamic]EntityAtlas,
-) -> [dynamic]EntityAtlas {
+EntitySortList :: proc(	arrayOfEntities: [dynamic]Entity,	arrayOfArrays: [dynamic][dynamic]Entity,) -> [dynamic]Entity {
 	arrayOfEntities := arrayOfEntities
 	for array in arrayOfArrays {
 		// fmt.println(array)
@@ -217,8 +199,8 @@ EntitySortList :: proc(
 	return EntitySortArray(arrayOfEntities)
 }
 
-EntitySortArray :: proc(arrayOfEntities: [dynamic]EntityAtlas) -> [dynamic]EntityAtlas {
-	slice.sort_by(arrayOfEntities[:], proc(entA: EntityAtlas, entB: EntityAtlas) -> bool {
+EntitySortArray :: proc(arrayOfEntities: [dynamic]Entity) -> [dynamic]Entity {
+	slice.sort_by(arrayOfEntities[:], proc(entA: Entity, entB: Entity) -> bool {
 		return entA.pos.y < entB.pos.y
 	})
 	return arrayOfEntities
