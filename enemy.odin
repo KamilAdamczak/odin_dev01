@@ -45,7 +45,20 @@ updateEnemy :: proc() {
 					projectile.health -= 1
 					ent.health -= projectile.dmg
 					// projectile.direction = calcDirection(projectile.pos, rand.choice(g_Game_State.enemy[:]).pos) 
-					append(&g_Game_State.particleEmmiters, createParticleEmmiter(ent.pos,{-1, -1},1, {texture = g_Game_State.assets["atlas"],	atlas_pos = {1, 1},	texture_scale = {16, 16},}, 4, .EXPLOSION, ent.color))
+					append(
+						&g_Game_State.particleEmmiters, 
+						createParticleEmmiter(
+							ent.pos,
+							{-1, -1},
+							1,
+							Sprite{
+								texture = g_Game_State.assets["atlas"],
+								atlas_pos = {1, 1},
+								texture_scale = {16, 16},
+							},
+							4,
+							.EXPLOSION,
+							ent.color))
 					append(&ent.projectiles, projectile)
 				}
 			}
