@@ -7,15 +7,26 @@ import "core:slice"
 import rl "vendor:raylib"
 
 Game_State :: struct {
-	worldGrid:      [WORLD_GRID.x][WORLD_GRID.y]Tile,
-	camera:         rl.Camera2D,
-	player:        	Player,
-	enemy:          [dynamic]Enemy,
-	enemySpawnTime: f64,
-	projectiles:    [dynamic]Projectile,
-	assets:         map[string]rl.Texture2D,
-	particleEmmiters : [dynamic]ParticleEmitter,
-	whiteSquareTexture : Sprite
+	worldGrid          : [WORLD_GRID.x][WORLD_GRID.y]Tile,
+	camera             : rl.Camera2D,
+	player             : Player,
+	enemy              : [dynamic]Enemy,
+	enemySpawnTime     : f64,
+	projectiles        : [dynamic]Projectile,
+	assets             : map[string]rl.Texture2D,
+	particleEmmiters   : [dynamic]ParticleEmitter,
+	whiteSquareTexture : Sprite,
+	current_level      : int,
+	level_state        : LEVEL_STATE,
+	killed_mobs        : int,
+	spawnedEnemies     : int,
+}
+
+LEVEL_STATE :: enum {
+	INIT,
+	GO,
+	SHOPPING,
+	END,
 }
 
 g_Game_State := Game_State {
@@ -23,8 +34,19 @@ g_Game_State := Game_State {
 		offset = {1280 / 2, 720 / 2}, 
 		zoom = 2
 	},
-	enemySpawnTime = 1,
+	enemySpawnTime = .5,
 }
+
+
+waves_enemy_number := map[int]int {
+	1 = 1,
+	2 = 50,
+	3 = 80,
+}
+
+levelUpWindow : [2]guiWindow
+
+Creditsy : string = "GAME MADE BY KAMIL ADAMCZAK, and Kikołaj via Discord"
 
 camera := &g_Game_State.camera
 
@@ -41,7 +63,7 @@ init :: proc() {
 	}
 
 	g_Game_State.whiteSquareTexture = createSprite(g_Game_State.assets["atlas"], {1,2})
-
+	g_Game_State.current_level = 1
 	
 	{ //WINDOW ICON
 		icon: rl.Image
@@ -83,14 +105,99 @@ init :: proc() {
 	TIMERS["one"] = 0.0
 	TIMERS["two"] = 0.0
 	}
+
+	g_Game_State.level_state = .INIT
+
+	levelUpWindow[0] = createGuiWindow(
+		createSprite(
+			g_Game_State.assets["atlas"],
+			{0,3},
+			{16,16}),
+		{
+			cast(f32)rl.GetScreenWidth()/2,
+			cast(f32)rl.GetScreenHeight()/2-300
+		},
+		{
+			cast(f32)rl.GetScreenWidth()*0.75,
+			60
+		},
+		{
+			7,
+			7,
+			7,
+			7
+		},
+		.NINE_PATCH
+	)
+	levelUpWindow[1] = createGuiWindow(
+		createSprite(
+			g_Game_State.assets["atlas"],
+			{0,4},
+			{32,32}),
+		{
+			cast(f32)rl.GetScreenWidth()/2,
+			cast(f32)rl.GetScreenHeight()/2
+		},
+		{
+			cast(f32)rl.GetScreenWidth()*0.75,
+			cast(f32)rl.GetScreenHeight()*0.75
+		},
+		{
+			7,
+			7,
+			7,
+			7
+		},
+		.NINE_PATCH
+	)
+	
+
 }
 
 /* ///////////////////////////////////////////////////////////////////////////////////////////
 										UPDATE
 ////////////////////////////////////////////////////////////////////////////////////////// */
 update :: proc() {
-	{//PLAYER
-		playerUpdate()
+	switch g_Game_State.level_state {
+		case .INIT:
+			if len(g_Game_State.enemy) == 0 {
+				g_Game_State.spawnedEnemies = 0
+				g_Game_State.killed_mobs = 0
+				g_Game_State.level_state = .GO
+			}
+		case .GO:
+			{//PLAYER
+				playerUpdate()
+			}
+
+			{//ENEMY
+				if  g_Game_State.killed_mobs < waves_enemy_number[g_Game_State.current_level] && g_Game_State.spawnedEnemies < waves_enemy_number[g_Game_State.current_level] {
+					timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
+				}
+				
+				updateEnemy()
+			}
+
+			{//PARTICLE EMMITTERS
+				for &emitter in g_Game_State.particleEmmiters {
+					ParticleEmitterUpdate(&emitter)
+				}
+			}
+
+			{ //CAMERA
+				camera.offset = {f32(rl.GetScreenWidth()/2), f32(rl.GetScreenHeight()/2)}
+				camera.target = g_Game_State.player.pos
+				camera.zoom += rl.GetMouseWheelMove()/10
+				camera.zoom = rl.Clamp(g_Game_State.camera.zoom, 1,5)
+			}
+
+			if g_Game_State.killed_mobs >= waves_enemy_number[g_Game_State.current_level] {
+				// g_Game_State.current_level += 1
+				g_Game_State.level_state = .SHOPPING
+			}
+
+		case .SHOPPING:
+		case .END:
 	}
 
 	{//Projectiles
@@ -102,15 +209,8 @@ update :: proc() {
 		}
 	}
 
-	{//ENEMY
-		timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
-		updateEnemy()
-	}
-
-	{//PARTICLE EMMITTERS
-		for &emitter in g_Game_State.particleEmmiters {
-			ParticleEmitterUpdate(&emitter)
-		}
+	{//GUI
+		updateGuiWindow(&levelUpWindow[1])
 	}
 
 	{//DEBUG
@@ -135,23 +235,19 @@ update :: proc() {
 			plater_attack = !plater_attack
 		}
 	}
-
-	{ //CAMERA
-	camera.offset = {f32(rl.GetScreenWidth()/2), f32(rl.GetScreenHeight()/2)}
-	camera.target = g_Game_State.player.pos
-	camera.zoom += rl.GetMouseWheelMove()/10
-	camera.zoom = rl.Clamp(g_Game_State.camera.zoom, 1,5)
-	}
 }
 
 /* ///////////////////////////////////////////////////////////////////////////////////////////
 										DRAW
 ////////////////////////////////////////////////////////////////////////////////////////// */
 draw :: proc() {
+	
 	entitySort := EntitySort(
 		{g_Game_State.player},
 		[dynamic][dynamic]Entity{childToParent(g_Game_State.enemy) , childToParent(g_Game_State.projectiles)},
 	)
+
+	
 
 	if DRAW_SHADOWS {
 		LOOP_STATE = .DRAW_SHADOWS
@@ -178,6 +274,14 @@ draw :: proc() {
 }
 
 drawGui :: proc() {
+	
+	text := rl.TextFormat("WELCOME IN SHOP")
+	if(g_Game_State.level_state == .SHOPPING) {
+		drawGuiWindow(..levelUpWindow[:])
+		// rl.DrawTextPro()
+		// rl.DrawText(text, cast(i32)levelUpWindow[0].rec.x, cast(i32)levelUpWindow[0].rec.y, 50, rl.WHITE)
+	}
+
 	if rl.IsKeyDown(.TAB) {
 		rl.DrawText(rl.TextFormat("%f", rl.GetFrameTime()), i32(10), i32(120), 20, rl.WHITE)
 		
@@ -192,7 +296,7 @@ drawGui :: proc() {
 			rl.WHITE,
 		)
 		
-		rl.DrawText(rl.TextFormat("Entities: %i", spawnCount), i32(10), i32(200), 30, rl.WHITE)
+		rl.DrawText(rl.TextFormat("Level: %i, Monster To Kill: %i, Entities: %i, Killed mobs %i",g_Game_State.current_level, waves_enemy_number[g_Game_State.current_level],spawnCount, g_Game_State.killed_mobs), i32(10), i32(200), 30, rl.WHITE)
 		rl.DrawText(rl.TextFormat("Player State: %i", g_Game_State.player.state), i32(10), i32(240), 30, rl.WHITE)
 	}
 }

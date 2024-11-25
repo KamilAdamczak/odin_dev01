@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:slice"
+import "core:math"
 import rl "vendor:raylib"
 
 Entity :: struct {
@@ -109,7 +110,7 @@ SetCollider :: proc {
 
 EntityMove :: proc(body: ^Entity) {
 	body.pos +=
-		Vec2f{f32(body.direction.x), f32(body.direction.y)} *
+	rl.Vector2Normalize(body.direction) *
 		body.speed *
 		f32(rl.GetFrameTime() * 100)
 	if body.direction.x < 0 {

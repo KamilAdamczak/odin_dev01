@@ -36,6 +36,7 @@ updateEnemy :: proc() {
 			delete_key(&TIMERS, combine({ent.id,"ATTACK"}))
 			ordered_remove(&g_Game_State.enemy, index)
 			spawnCount -= 1
+			g_Game_State.killed_mobs += 1
 			continue
 		}
 
@@ -187,4 +188,5 @@ spawnEnemy :: proc() {
 	TIMERS[enemy.id] = 0.0
 	TIMERS[combine({enemy.id,"ATTACK"})] = 0.0
 	spawnCount += 1
+	g_Game_State.spawnedEnemies += 1  
 }

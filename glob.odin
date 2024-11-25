@@ -44,13 +44,13 @@ Sprite :: struct {
 	flip : bool
 }
 
+createSprite :: proc(texture : rl.Texture2D, atlas_pos : Vec2i = {0,0}, texture_scale: Vec2i = {16,16}, offset : Vec2f = {0,0}, flip : bool = false) -> Sprite {
+	return Sprite {texture, atlas_pos, texture_scale, offset, flip}
+}
+
 Circle :: struct {
 	center: rl.Vector2,
 	r:      f32,
-}
-
-createSprite :: proc(texture : rl.Texture2D, atlas_pos : Vec2i = {0,0}, texture_scale: Vec2i = {16,16}, offset : Vec2f = {0,0}, flip : bool = false) -> Sprite {
-	return Sprite {texture, atlas_pos, texture_scale, offset, flip}
 }
 
 TIMERS := map[string]f64 {}
@@ -171,24 +171,14 @@ getTileVec2i :: proc(worldPos: Vec2i) -> ^Tile {
 
 closesTarget :: proc(arrayOfObjects : [dynamic]Entity, mainObject : Entity) -> (cTarget : Entity) {
 	cTarget = arrayOfObjects[0]
-			old_cc := math.sqrt(
-				(abs(cTarget.pos.x - mainObject.pos.x) *
-					abs(cTarget.pos.x - mainObject.pos.x)) +
-				(abs(cTarget.pos.y - mainObject.pos.y) *
-						abs(cTarget.pos.y - mainObject.pos.y)),
-			)
-			for ent in arrayOfObjects {
-				new_cc := math.sqrt(
-					(abs(ent.pos.x - mainObject.pos.x) *
-						abs(ent.pos.x - mainObject.pos.x)) +
-					(abs(ent.pos.y - mainObject.pos.y) *
-							abs(ent.pos.y - mainObject.pos.y)),
-				)
-				if new_cc < old_cc {
-					cTarget = ent
-					old_cc = new_cc
-				}
-			}
+	old_cc := rl.Vector2Distance(cTarget.pos, mainObject.pos)
+	for ent in arrayOfObjects {
+		new_cc := rl.Vector2Distance(ent.pos, mainObject.pos)
+		if new_cc < old_cc {
+			cTarget = ent
+			old_cc = new_cc
+		}
+	}
 	return cTarget
 }
 

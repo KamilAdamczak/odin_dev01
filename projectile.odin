@@ -19,13 +19,13 @@ spawnProjectile :: proc(position: Vec2f, direction: Vec2f) {
 				atlas_pos = {0, 1},
 				texture_scale = {16, 16},
 			},
-			health = 3,
+			health = 1,
 			speed = 3,
 			color = rl.WHITE,
 			direction = direction,
 			id = genRandString(20)
 		},
-		dmg = 20,
+		dmg = 10,
 	}
 	projectile.collider = SetCollider(.OVAL, Vec2f{4.0, 0.0})
 	projectile.particleEmitter = createParticleEmmiter(projectile.pos, projectile.direction, 1.0, projectile.texture, 100000000)

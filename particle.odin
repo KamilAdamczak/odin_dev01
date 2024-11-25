@@ -164,5 +164,3 @@ ParticleEmitterDraw :: proc(particleEmitter : ParticleEmitter) {
             )
     }
 }
-
-
