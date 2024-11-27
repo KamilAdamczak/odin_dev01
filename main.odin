@@ -40,13 +40,14 @@ main :: proc() {
 		LOOP_STATE = .DRAW_GUI
 		drawGui()
 		if sFPS.show {
-			rl.DrawText(
-				rl.TextFormat("%i", rl.GetFPS()),
-				i32(sFPS.pos.x),
-				i32(sFPS.pos.y),
-				sFPS.size,
-				sFPS.color,
-			)
+			// rl.DrawText(
+			// 	rl.TextFormat("%i", rl.GetFPS()),
+			// 	i32(sFPS.pos.x),
+			// 	i32(sFPS.pos.y),
+			// 	sFPS.size,
+			// 	sFPS.color,
+			// )
+			rl.DrawFPS(i32(sFPS.pos.x),i32(sFPS.pos.y))
 		}
 		rl.EndDrawing()
 		free_all(context.temp_allocator)

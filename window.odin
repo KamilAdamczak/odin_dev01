@@ -6,9 +6,10 @@ guiWindow :: struct {
     texture : rl.Texture2D,
     rec : rl.Rectangle,
     nPatchInfo : rl.NPatchInfo,
+    origin : rl.Vector2,
 }
  
-createGuiWindow :: proc(sprite : Sprite, pos : Vec2f, size : Vec2f, offsets : [4]i32, layout : rl.NPatchLayout) -> guiWindow {
+createGuiWindow :: proc(sprite : Sprite, pos : Vec2f, size : Vec2f, origin : rl.Vector2, offsets : [4]i32, layout : rl.NPatchLayout) -> guiWindow {
     return {
         texture = sprite.texture,
         rec = {pos.x, pos.y, size.x, size.y},
@@ -24,23 +25,15 @@ createGuiWindow :: proc(sprite : Sprite, pos : Vec2f, size : Vec2f, offsets : [4
             offsets[2],
             offsets[3],
             layout
-        }   
+        },
+        origin = origin 
     }
 }
-drawGuiWindow :: proc {
-    drawGuiWindowArray,
-    drawGuiWindowSingle,
-}
 
-drawGuiWindowArray :: proc(guiWindows : ..guiWindow) {
+drawGuiWindow :: proc(guiWindows : ..guiWindow) {
     for guiWin in guiWindows {
-        rl.DrawTextureNPatch(guiWin.texture, guiWin.nPatchInfo, guiWin.rec, {guiWin.rec.width/2, guiWin.rec.height/2}, 0, rl.WHITE)
+        rl.DrawTextureNPatch(guiWin.texture, guiWin.nPatchInfo, guiWin.rec, guiWin.origin, 0, rl.WHITE)
     }
-}
-
-
-drawGuiWindowSingle :: proc(guiWin : guiWindow) {
-    rl.DrawTextureNPatch(guiWin.texture, guiWin.nPatchInfo, guiWin.rec, {guiWin.rec.width/2, guiWin.rec.height/2}, 0, rl.WHITE)
 }
 
 updateGuiWindow :: proc(windows : ..^guiWindow) {

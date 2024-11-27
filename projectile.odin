@@ -32,8 +32,8 @@ spawnProjectile :: proc(position: Vec2f, direction: Vec2f) {
 	append(&g_Game_State.projectiles, projectile)
 }
 
-updateProjectiles :: proc() {
-	for &projectile, index in g_Game_State.projectiles {
+updateProjectiles :: proc(projectiles : ..^Projectile) {
+	for &projectile, index in  projectiles{
 		if projectile.health <= 0 ||
 		   abs(projectile.pos.x - g_Game_State.player.pos.x) > 1000 ||
 		   abs(projectile.pos.y - g_Game_State.player.pos.y) > 1000 {

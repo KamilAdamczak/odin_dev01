@@ -116,7 +116,7 @@ timeRunWithVariable :: proc(timer: ^f64, timeToWait: f64, currentTime: f64 , var
 	}
 }
 
-combine :: proc(texts : [dynamic]string) -> string {
+combine :: proc(texts : ..string) -> string {
 	return strings.join(texts[:],"")
 }
 
@@ -133,7 +133,7 @@ genChar :: proc() -> string {
 
 genRandString :: proc(lenght : int) -> (randomString : string) {
 	for index in 0..<lenght {
-		randomString = combine({randomString, genChar()})
+		randomString = combine(randomString, genChar())
 	}
 	return randomString
 }
@@ -169,7 +169,7 @@ getTileVec2i :: proc(worldPos: Vec2i) -> ^Tile {
 	return getTile(x, y)
 }
 
-closesTarget :: proc(arrayOfObjects : [dynamic]Entity, mainObject : Entity) -> (cTarget : Entity) {
+closesTarget :: proc(mainObject : Entity, arrayOfObjects : ..Entity) -> (cTarget : Entity) {
 	cTarget = arrayOfObjects[0]
 	old_cc := rl.Vector2Distance(cTarget.pos, mainObject.pos)
 	for ent in arrayOfObjects {
@@ -187,4 +187,22 @@ childToParent::proc(child : $T) -> (parent : [dynamic]Entity) {
 		append(&parent, ent.ent)
 	}
 	return parent
+}
+
+textAlign :: enum {
+	LEFT,
+	CENTER,
+	RIGHT,
+}
+
+setTextAlign :: proc(txt : cstring, font : rl.Font , fontSize, fontSpacing : f32, alignType : textAlign) -> rl.Vector2 {
+	switch alignType {
+		case .LEFT:
+			return {0,0}
+		case .CENTER:
+			return {rl.MeasureTextEx(font,txt,fontSize,fontSpacing).x/2,0}
+		case .RIGHT:
+			return {rl.MeasureTextEx(font,txt,fontSize,fontSpacing).x,0}
+	}
+	return {0,0}
 }

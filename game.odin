@@ -20,6 +20,7 @@ Game_State :: struct {
 	level_state        : LEVEL_STATE,
 	killed_mobs        : int,
 	spawnedEnemies     : int,
+	remaning_time      : int,
 }
 
 LEVEL_STATE :: enum {
@@ -38,8 +39,8 @@ g_Game_State := Game_State {
 }
 
 
-waves_enemy_number := map[int]int {
-	1 = 1,
+waves_time := map[int]int {
+	1 = 20,
 	2 = 50,
 	3 = 80,
 }
@@ -64,6 +65,7 @@ init :: proc() {
 
 	g_Game_State.whiteSquareTexture = createSprite(g_Game_State.assets["atlas"], {1,2})
 	g_Game_State.current_level = 1
+	g_Game_State.remaning_time = -1000
 	
 	{ //WINDOW ICON
 		icon: rl.Image
@@ -104,6 +106,7 @@ init :: proc() {
 	{ //INIT TIMERS
 	TIMERS["one"] = 0.0
 	TIMERS["two"] = 0.0
+	TIMERS["COUNTDOWN"] = 0.0
 	}
 
 	g_Game_State.level_state = .INIT
@@ -121,6 +124,7 @@ init :: proc() {
 			cast(f32)rl.GetScreenWidth()*0.75,
 			60
 		},
+		{cast(f32)rl.GetScreenWidth()*0.75/2, 60/2},
 		{
 			7,
 			7,
@@ -142,6 +146,7 @@ init :: proc() {
 			cast(f32)rl.GetScreenWidth()*0.75,
 			cast(f32)rl.GetScreenHeight()*0.75
 		},
+		{cast(f32)rl.GetScreenWidth()*0.75/2, cast(f32)rl.GetScreenHeight()*0.75/2},
 		{
 			7,
 			7,
@@ -158,29 +163,43 @@ init :: proc() {
 										UPDATE
 ////////////////////////////////////////////////////////////////////////////////////////// */
 update :: proc() {
+	
 	switch g_Game_State.level_state {
 		case .INIT:
 			if len(g_Game_State.enemy) == 0 {
 				g_Game_State.spawnedEnemies = 0
 				g_Game_State.killed_mobs = 0
+				g_Game_State.remaning_time = waves_time[g_Game_State.current_level]
 				g_Game_State.level_state = .GO
 			}
 		case .GO:
+			timerRun(&TIMERS["COUNTDOWN"], 1, rl.GetTime(), proc() {g_Game_State.remaning_time-=1})
+			
 			{//PLAYER
 				playerUpdate()
 			}
 
 			{//ENEMY
-				if  g_Game_State.killed_mobs < waves_enemy_number[g_Game_State.current_level] && g_Game_State.spawnedEnemies < waves_enemy_number[g_Game_State.current_level] {
-					timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
-				}
-				
+				// if  g_Game_State.killed_mobs < waves_enemy_number[g_Game_State.current_level] && g_Game_State.spawnedEnemies < waves_enemy_number[g_Game_State.current_level] {
+				// 	timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
+				// }
+				timerRun(&TIMERS["one"], g_Game_State.enemySpawnTime, rl.GetTime(), spawnEnemy)
 				updateEnemy()
 			}
 
 			{//PARTICLE EMMITTERS
 				for &emitter in g_Game_State.particleEmmiters {
 					ParticleEmitterUpdate(&emitter)
+				}
+			}
+
+			{//Projectiles
+				updateProjectiles(..&(g_Game_State.projectiles[:]))
+				if len(g_Game_State.enemy) > 0 && plater_attack {
+					timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(), proc() {
+						// spawnProjectile(g_Game_State.player.ent.pos,calcDirection(g_Game_State.player.pos, closesTarget(childToParent(g_Game_State.enemy), g_Game_State.player).pos))
+						spawnProjectile(g_Game_State.player.ent.pos,calcDirection(g_Game_State.player.pos, closesTarget( g_Game_State.player, ..childToParent(g_Game_State.enemy)[:]).pos))
+					})
 				}
 			}
 
@@ -191,23 +210,17 @@ update :: proc() {
 				camera.zoom = rl.Clamp(g_Game_State.camera.zoom, 1,5)
 			}
 
-			if g_Game_State.killed_mobs >= waves_enemy_number[g_Game_State.current_level] {
+			if g_Game_State.remaning_time <= 0 {
 				// g_Game_State.current_level += 1
 				g_Game_State.level_state = .SHOPPING
 			}
 
 		case .SHOPPING:
+			updateProjectiles(..(&g_Game_State.projectiles)[:])
 		case .END:
 	}
 
-	{//Projectiles
-		updateProjectiles()
-		if len(g_Game_State.enemy) > 0 && plater_attack {
-			timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(), proc() {
-				spawnProjectile(g_Game_State.player.ent.pos,calcDirection(g_Game_State.player.pos, closesTarget(childToParent(g_Game_State.enemy), g_Game_State.player).pos))
-			})
-		}
-	}
+
 
 	{//GUI
 		updateGuiWindow(&levelUpWindow[1])
@@ -247,26 +260,28 @@ draw :: proc() {
 		[dynamic][dynamic]Entity{childToParent(g_Game_State.enemy) , childToParent(g_Game_State.projectiles)},
 	)
 
-	
-
 	if DRAW_SHADOWS {
 		LOOP_STATE = .DRAW_SHADOWS
-		for ent in entitySort {
-			shadow := ent
-			shadow.pos.x -= 2
-			shadow.pos.y -= 3
-			EntityDraw(shadow, rl.Color{0, 0, 0, 80})
+		{
+			shadows : [dynamic]Entity
+			for ent in entitySort {
+				shadow := ent
+				shadow.pos.x -= 2
+				shadow.pos.y -= 3
+				shadow.color = rl.Fade(rl.BLACK, .5)
+				append(&shadows, shadow)
+			}
+			EntityDraw(..shadows[:])
 		}
 	}
 
 	LOOP_STATE = .DRAW_SPRITES
 
-	for ent in entitySort {
-		EntityDraw(ent, ent.color)
-	}
-	for emitter in g_Game_State.particleEmmiters {
-		ParticleEmitterDraw(emitter)
-	}
+	EntityDraw(..entitySort[:])
+
+
+	ParticleEmitterDraw(..g_Game_State.particleEmmiters[:])
+
 	delete(entitySort)
 
 	//Before everything else
@@ -278,7 +293,16 @@ drawGui :: proc() {
 	text := rl.TextFormat("WELCOME IN SHOP")
 	if(g_Game_State.level_state == .SHOPPING) {
 		drawGuiWindow(..levelUpWindow[:])
-		// rl.DrawTextPro()
+		rl.DrawTextPro(
+			rl.GetFontDefault(),
+			text,
+			{levelUpWindow[0].origin.x, levelUpWindow[0].rec.y},
+			{0,0},
+			0.0,
+			30,
+			1.0,
+			rl.WHITE
+		)
 		// rl.DrawText(text, cast(i32)levelUpWindow[0].rec.x, cast(i32)levelUpWindow[0].rec.y, 50, rl.WHITE)
 	}
 
@@ -296,7 +320,19 @@ drawGui :: proc() {
 			rl.WHITE,
 		)
 		
-		rl.DrawText(rl.TextFormat("Level: %i, Monster To Kill: %i, Entities: %i, Killed mobs %i",g_Game_State.current_level, waves_enemy_number[g_Game_State.current_level],spawnCount, g_Game_State.killed_mobs), i32(10), i32(200), 30, rl.WHITE)
+		rl.DrawText(rl.TextFormat("Level: %i, Monster To Kill: %i, Entities: %i, Killed mobs %i",g_Game_State.current_level, waves_time[g_Game_State.current_level],spawnCount, g_Game_State.killed_mobs), i32(10), i32(200), 30, rl.WHITE)
 		rl.DrawText(rl.TextFormat("Player State: %i", g_Game_State.player.state), i32(10), i32(240), 30, rl.WHITE)
 	}
+
+	{//DisplayTimer
+		timerStr := rl.TextFormat("%i", g_Game_State.remaning_time)
+		timerFont := rl.GetFontDefault()
+		timerFontSize : f32 = 40
+		timerSpacing : f32 = 2
+		timerposition : rl.Vector2 = {cast(f32)rl.GetScreenWidth()/2, 20}
+		timerOrigin := setTextAlign(timerStr, timerFont, timerFontSize, timerSpacing, .CENTER)
+		rl.DrawTextPro(timerFont,timerStr,timerposition ,timerOrigin,0.0,timerFontSize,timerSpacing,rl.WHITE)
+	}
 }
+
+

@@ -33,7 +33,7 @@ updateEnemy :: proc() {
 	for &ent, index in g_Game_State.enemy {
 		if ent.health <= 0 {
 			delete_key(&TIMERS, ent.id)
-			delete_key(&TIMERS, combine({ent.id,"ATTACK"}))
+			delete_key(&TIMERS, combine(ent.id,"ATTACK"))
 			ordered_remove(&g_Game_State.enemy, index)
 			spawnCount -= 1
 			g_Game_State.killed_mobs += 1
@@ -42,7 +42,7 @@ updateEnemy :: proc() {
 
 		for &projectile in g_Game_State.projectiles {
 			if checkCollision(ent, projectile) {
-				if(!hasID(ent.projectiles, projectile)) {
+				if(!hasID(ent.projectiles,projectile)) {
 					projectile.health -= 1
 					ent.health -= projectile.dmg
 					// projectile.direction = calcDirection(projectile.pos, rand.choice(g_Game_State.enemy[:]).pos) 
@@ -104,7 +104,7 @@ updateEnemy :: proc() {
 		switch ent.state {
 			case .IDLE:
 				ent.rotation = 0
-				TIMERS[combine({ent.id,"ATTACK"})] = 0.0
+				TIMERS[combine(ent.id,"ATTACK")] = 0.0
 			case .ATTACK:
 				timerRun(&TIMERS[ent.id], .01, rl.GetTime(),&ent, enemyAttack)
 			case .MOVE:
@@ -138,7 +138,7 @@ enemyRUN :: proc(current_enemy : ^Enemy) {
 
 enemyAttack :: proc(ent : ^Enemy) {
 	ent.rotation = 0
-	timerRun(&TIMERS[combine({ent.id,"ATTACK"})], ent.attackSpeed, rl.GetTime(),proc() {g_Game_State.player.currentHP-=1})
+	timerRun(&TIMERS[combine(ent.id,"ATTACK")], ent.attackSpeed, rl.GetTime(),proc() {g_Game_State.player.currentHP-=1})
 	if(calcDistance(ent.pos, ent.pos+ent.texture.offset) > enemyAnimations["ATTACK"].valB[0]) {
 		ent.currentDir = -1	
 	} else if(calcDistance(ent.pos, ent.pos+ent.texture.offset) <= 0) {
@@ -186,7 +186,7 @@ spawnEnemy :: proc() {
 	enemy.collider = SetCollider(.OVAL, Vec2f{3, 0})
 	append(&g_Game_State.enemy, enemy)
 	TIMERS[enemy.id] = 0.0
-	TIMERS[combine({enemy.id,"ATTACK"})] = 0.0
+	TIMERS[combine(enemy.id,"ATTACK")] = 0.0
 	spawnCount += 1
 	g_Game_State.spawnedEnemies += 1  
 }

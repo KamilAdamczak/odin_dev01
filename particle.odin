@@ -147,8 +147,9 @@ ParticleEmitterUpdate :: proc(particleEmitter : ^ParticleEmitter) {
     }
 }
 
-ParticleEmitterDraw :: proc(particleEmitter : ParticleEmitter) {
-    for particle in particleEmitter.particles {
+ParticleEmitterDraw :: proc(particleEmitters : ..ParticleEmitter) {
+    for particleEmitter in particleEmitters {
+        for particle in particleEmitter.particles {
             rl.DrawTexturePro(
                 particle.sprite.texture,
                 {
@@ -162,5 +163,6 @@ ParticleEmitterDraw :: proc(particleEmitter : ParticleEmitter) {
                 0.0,
                 particle.color - {0,0,0,particle.alpha},
             )
+        }
     }
 }

@@ -151,44 +151,45 @@ EntityDrawNormal :: proc(ent: Entity) {
 	)
 }
 
-EntityDrawTint :: proc(ent: Entity, tint: rl.Color) {
-	if DRAW_COLLIDERS && LOOP_STATE == .DRAW_SPRITES {
-		switch ent.collider.type {
-		case .BOX:
-			rl.DrawRectangleLines(
-				i32(ent.pos.x) - i32(ent.texture.texture_scale.x) / 2,
-				i32(ent.pos.y) - i32(ent.texture.texture_scale.y) / 2,
-				i32(ent.collider.size.x),
-				i32(ent.collider.size.y),
-				tint,
-			)
-		case .OVAL:
-			rl.DrawCircleLines(i32(ent.pos.x), i32(ent.pos.y), ent.collider.size.x, tint)
-		case .RECT:
-			rl.DrawRectangleLines(
-				i32(ent.pos.x) - i32(ent.texture.texture_scale.x) / 2,
-				i32(ent.pos.y) - i32(ent.texture.texture_scale.y) / 2,
-				i32(ent.collider.size.x),
-				i32(ent.collider.size.y),
-				tint,
-			)
+EntityDrawTint :: proc(entities: ..Entity, tint: rl.Color = rl.WHITE) {
+	for ent in entities {
+		if DRAW_COLLIDERS && LOOP_STATE == .DRAW_SPRITES {
+			switch ent.collider.type {
+			case .BOX:
+				rl.DrawRectangleLines(
+					i32(ent.pos.x) - i32(ent.texture.texture_scale.x) / 2,
+					i32(ent.pos.y) - i32(ent.texture.texture_scale.y) / 2,
+					i32(ent.collider.size.x),
+					i32(ent.collider.size.y),
+					ent.color != {} ? ent.color : tint,
+				)
+			case .OVAL:
+				rl.DrawCircleLines(i32(ent.pos.x), i32(ent.pos.y), ent.collider.size.x, ent.color != {} ? ent.color : tint,)
+			case .RECT:
+				rl.DrawRectangleLines(
+					i32(ent.pos.x) - i32(ent.texture.texture_scale.x) / 2,
+					i32(ent.pos.y) - i32(ent.texture.texture_scale.y) / 2,
+					i32(ent.collider.size.x),
+					i32(ent.collider.size.y),
+					ent.color != {} ? ent.color : tint,
+				)
+			}
 		}
 
+		rl.DrawTexturePro(
+			ent.texture.texture,
+			{
+				f32(ent.texture.atlas_pos.x) * 16,
+				f32(ent.texture.atlas_pos.y) * 16,
+				!ent.texture.flip ? f32(ent.texture.texture_scale.x) : -f32(ent.texture.texture_scale.x),
+				f32(ent.texture.texture_scale.y),
+			},
+			{f32(ent.pos.x)+ent.texture.offset.x, f32(ent.pos.y)+ent.texture.offset.y, 16.0, 16.0},
+			{8, 8},
+			ent.rotation,
+			ent.color != {} ? ent.color : tint,
+		)
 	}
-
-	rl.DrawTexturePro(
-		ent.texture.texture,
-		{
-			f32(ent.texture.atlas_pos.x) * 16,
-			f32(ent.texture.atlas_pos.y) * 16,
-			!ent.texture.flip ? f32(ent.texture.texture_scale.x) : -f32(ent.texture.texture_scale.x),
-			f32(ent.texture.texture_scale.y),
-		},
-		{f32(ent.pos.x)+ent.texture.offset.x, f32(ent.pos.y)+ent.texture.offset.y, 16.0, 16.0},
-		{8, 8},
-		ent.rotation,
-		tint,
-	)
 }
 
 EntitySortList :: proc(	arrayOfEntities: [dynamic]Entity,	arrayOfArrays: [dynamic][dynamic]Entity,) -> [dynamic]Entity {
