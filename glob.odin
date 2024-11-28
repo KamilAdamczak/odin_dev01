@@ -102,6 +102,8 @@ timerRun :: proc {
 	timeRunWithVariable,
 }
 
+
+
 timeRunNormal :: proc(timer: ^f64, timeToWait: f64, currentTime: f64, callProcedure: proc()) {
 	if (timer^ + timeToWait < currentTime) {
 		callProcedure()
@@ -205,4 +207,13 @@ setTextAlign :: proc(txt : cstring, font : rl.Font , fontSize, fontSpacing : f32
 			return {rl.MeasureTextEx(font,txt,fontSize,fontSpacing).x,0}
 	}
 	return {0,0}
+}
+
+convert_to_pointers :: proc(array_of_object : ..$T) -> []^T {
+	// print(cast(string)rl.TextFormat("%i",(len(array_of_object))))
+	pointers := make([]^type_of(array_of_object[0]), len(array_of_object))
+	for &p, i in array_of_object {
+		pointers[i] = &p
+	}
+	return pointers
 }

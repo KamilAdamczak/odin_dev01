@@ -21,6 +21,14 @@ Game_State :: struct {
 	killed_mobs        : int,
 	spawnedEnemies     : int,
 	remaning_time      : int,
+	thigs_to_draw      : [dynamic]procCall,
+}
+
+Callback :: proc(..Sprite)
+
+procCall :: struct {
+	procedure : Callback,
+	value : [dynamic]Sprite,
 }
 
 LEVEL_STATE :: enum {
@@ -83,7 +91,7 @@ init :: proc() {
 			color  = rl.WHITE,
 		}
 
-		g_Game_State.player.attackSpeed = 1
+		g_Game_State.player.attackSpeed = 2
 
 		g_Game_State.player.texture = Sprite {
 			texture       = g_Game_State.assets["atlas"],
@@ -193,11 +201,11 @@ update :: proc() {
 				}
 			}
 
-			{//Projectiles
-				updateProjectiles(..&(g_Game_State.projectiles[:]))
+			{//Projectilesarray_of_object
+				updateProjectiles(..convert_to_pointers(..g_Game_State.projectiles[:])[:])
+				// fmt.println(slice.as_ptr(g_Game_State.projectiles[:])[:])
 				if len(g_Game_State.enemy) > 0 && plater_attack {
 					timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(), proc() {
-						// spawnProjectile(g_Game_State.player.ent.pos,calcDirection(g_Game_State.player.pos, closesTarget(childToParent(g_Game_State.enemy), g_Game_State.player).pos))
 						spawnProjectile(g_Game_State.player.ent.pos,calcDirection(g_Game_State.player.pos, closesTarget( g_Game_State.player, ..childToParent(g_Game_State.enemy)[:]).pos))
 					})
 				}
@@ -216,7 +224,7 @@ update :: proc() {
 			}
 
 		case .SHOPPING:
-			updateProjectiles(..(&g_Game_State.projectiles)[:])
+			updateProjectiles(..convert_to_pointers(..g_Game_State.projectiles[:])[:])
 		case .END:
 	}
 
@@ -278,7 +286,10 @@ draw :: proc() {
 	LOOP_STATE = .DRAW_SPRITES
 
 	EntityDraw(..entitySort[:])
-
+	for thing in g_Game_State.thigs_to_draw {
+		thing.procedure(..thing.value[:])
+	}
+	
 
 	ParticleEmitterDraw(..g_Game_State.particleEmmiters[:])
 

@@ -25,17 +25,15 @@ main :: proc() {
 	for !rl.WindowShouldClose() {
 		TICK_TIMER -= rl.GetFrameTime() //get delta time
 		LATE_TICK_TIMER -= rl.GetFrameTime()
-		rl.BeginDrawing()
-		rl.ClearBackground(rl.Color(BACKGROUND_COLOR))
-		rl.BeginMode2D(camera^)
-
 		if TICK_TIMER <= 0 {
 			LOOP_STATE = .UPDATE
 			update()
-			draw()
 			TICK_TIMER = (TICK_RATE + TICK_TIMER) 
 		}
-
+		rl.BeginDrawing()
+		rl.ClearBackground(rl.Color(BACKGROUND_COLOR))
+		rl.BeginMode2D(camera^)
+		draw()
 		rl.EndMode2D()
 		LOOP_STATE = .DRAW_GUI
 		drawGui()
