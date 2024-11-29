@@ -33,7 +33,6 @@ spawnProjectile :: proc(position: Vec2f, direction: Vec2f) {
 }
 
 updateProjectiles :: proc(projectiles : ..^Projectile) {
-	print(cast(string)rl.TextFormat("%i",(len(projectiles))))
 	for &projectile, index in  projectiles{
 		if projectile.health <= 0 ||
 		   abs(projectile.pos.x - g_Game_State.player.pos.x) > 1000 ||
@@ -47,7 +46,6 @@ updateProjectiles :: proc(projectiles : ..^Projectile) {
 		EntityMove(projectile)
 		projectile.particleEmitter.pos = projectile.pos
 		ParticleEmitterUpdate(&projectile.particleEmitter)
-		append(&g_Game_State.thigs_to_draw, procCall{SpriteDraw, particleEmittersReturnSprite(projectile.particleEmitter)})
 		// ParticleEmitterDraw(projectile.particleEmitter)
 		// projectile.direction = calcDirection(projectile.pos, closesTarget(childToParent(g_Game_State.enemy), projectile).pos)
 	}

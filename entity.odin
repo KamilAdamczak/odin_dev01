@@ -28,6 +28,20 @@ ColliderType :: enum {
 	OVAL,
 }
 
+createEntity :: proc(position : Vec2f = 0, spd : f32 = 0, dir : Vec2f = {0,0}, spr : Sprite = g_Game_State.whiteSquareTexture, col : rl.Color = rl.WHITE, hp : int = 0, coll : Collider, identification : string = "", rot : f32 = 0.0) -> Entity {
+	return Entity {
+		pos  = position,
+		speed     = spd,
+		direction = dir,
+		texture   = spr,
+		color     = col,
+		health    = hp,
+		collider  = coll,
+		id        = identification,
+		rotation  = rot,
+	}
+}
+
 getColliderRect :: proc(ent: Entity) -> rl.Rectangle {
 	rect := rl.Rectangle {
 		f32(ent.pos.x) - f32(ent.texture.texture_scale.x) / 2,

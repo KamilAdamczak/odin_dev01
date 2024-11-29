@@ -184,11 +184,29 @@ closesTarget :: proc(mainObject : Entity, arrayOfObjects : ..Entity) -> (cTarget
 	return cTarget
 }
 
-childToParent::proc(child : $T) -> (parent : [dynamic]Entity) {
-	for ent in child {
-		append(&parent, ent.ent)
-	}
-	return parent
+// childToParent::proc(child : $T) -> (parent : [dynamic]Entity) {
+// 	for ent in child {
+// 		append(&parent, ent.ent)
+// 	}
+// 	return parent
+// }
+
+// getFromStruct :: proc(typePtr: ^S, structArr: ..T) -> (values: [dynamic]S)
+//     where T: type {
+//     for single_struct in structArr {
+//         append(&values, typePtr^); // Dereference the field pointer to get its value
+//         typePtr += 1;             // Move the pointer to the next struct
+//     }
+//     return values;
+// }
+
+
+getFromStruct :: proc(structArr: ..$T, fieldAccessor: proc(^T) -> $S = nil) -> (values: [dynamic]S) {
+    for &single_struct in structArr {
+        value := fieldAccessor(&single_struct);
+        append(&values, value);
+    }
+    return values;
 }
 
 textAlign :: enum {

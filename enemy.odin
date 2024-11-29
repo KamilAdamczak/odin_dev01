@@ -34,6 +34,7 @@ updateEnemy :: proc() {
 		if ent.health <= 0 {
 			delete_key(&TIMERS, ent.id)
 			delete_key(&TIMERS, combine(ent.id,"ATTACK"))
+			append(&g_Game_State.souls_drops, createSoul(ent.pos))
 			ordered_remove(&g_Game_State.enemy, index)
 			spawnCount -= 1
 			g_Game_State.killed_mobs += 1

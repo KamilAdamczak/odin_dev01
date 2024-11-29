@@ -20,7 +20,7 @@ sFPS := SFPS {
 DRAW_COLLIDERS := false
 LOOP_STATE: LOOP_STATE_VALUES = .INIT
 main :: proc() {
-	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
+	// rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	init()
 	for !rl.WindowShouldClose() {
 		TICK_TIMER -= rl.GetFrameTime() //get delta time
@@ -38,14 +38,8 @@ main :: proc() {
 		LOOP_STATE = .DRAW_GUI
 		drawGui()
 		if sFPS.show {
-			// rl.DrawText(
-			// 	rl.TextFormat("%i", rl.GetFPS()),
-			// 	i32(sFPS.pos.x),
-			// 	i32(sFPS.pos.y),
-			// 	sFPS.size,
-			// 	sFPS.color,
-			// )
 			rl.DrawFPS(i32(sFPS.pos.x),i32(sFPS.pos.y))
+			// fmt.print(rl.GetFPS())
 		}
 		rl.EndDrawing()
 		free_all(context.temp_allocator)

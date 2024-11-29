@@ -21,14 +21,7 @@ Game_State :: struct {
 	killed_mobs        : int,
 	spawnedEnemies     : int,
 	remaning_time      : int,
-	thigs_to_draw      : [dynamic]procCall,
-}
-
-Callback :: proc(..Sprite)
-
-procCall :: struct {
-	procedure : Callback,
-	value : [dynamic]Sprite,
+	souls_drops        : [dynamic]Soul,
 }
 
 LEVEL_STATE :: enum {
@@ -206,7 +199,19 @@ update :: proc() {
 				// fmt.println(slice.as_ptr(g_Game_State.projectiles[:])[:])
 				if len(g_Game_State.enemy) > 0 && plater_attack {
 					timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(), proc() {
-						spawnProjectile(g_Game_State.player.ent.pos,calcDirection(g_Game_State.player.pos, closesTarget( g_Game_State.player, ..childToParent(g_Game_State.enemy)[:]).pos))
+						spawnProjectile(
+							g_Game_State.player.ent.pos,
+							calcDirection(
+										g_Game_State.player.pos, 
+										closesTarget(
+														g_Game_State.player, 
+														..getFromStruct(
+																		..g_Game_State.enemy[:], 
+																		fieldAccessor = proc(ent: ^Enemy) -> Entity {return ent.ent;}
+																		)[:]
+													).pos
+							)
+						)
 					})
 				}
 			}
@@ -265,9 +270,13 @@ draw :: proc() {
 	
 	entitySort := EntitySort(
 		{g_Game_State.player},
-		[dynamic][dynamic]Entity{childToParent(g_Game_State.enemy) , childToParent(g_Game_State.projectiles)},
+		[dynamic][dynamic]Entity{
+									getFromStruct(..g_Game_State.enemy[:], fieldAccessor = proc(ent: ^Enemy) -> Entity {return ent.ent;}) , 
+									getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(ent: ^Projectile) -> Entity {return ent.ent;})
+								},
 	)
-
+	//getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(p: ^Projectile) -> ParticleEmitter {return p.particleEmitter;})
+	
 	if DRAW_SHADOWS {
 		LOOP_STATE = .DRAW_SHADOWS
 		{
@@ -284,15 +293,13 @@ draw :: proc() {
 	}
 
 	LOOP_STATE = .DRAW_SPRITES
+	ParticleEmitterDraw(..getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(p: ^Projectile) -> ParticleEmitter {return p.particleEmitter;})[:])
 
 	EntityDraw(..entitySort[:])
-	for thing in g_Game_State.thigs_to_draw {
-		thing.procedure(..thing.value[:])
-	}
 	
-
 	ParticleEmitterDraw(..g_Game_State.particleEmmiters[:])
-
+	soulDraw(..g_Game_State.souls_drops[:])
+	
 	delete(entitySort)
 
 	//Before everything else
