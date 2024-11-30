@@ -40,7 +40,8 @@ updateProjectiles :: proc(projectiles : ..^Projectile) {
 			projectile.dmg = 0
 			projectile.color = rl.Color {0,0,0,0}
 			clearTimers(projectile.particleEmitter)
-			unordered_remove(&g_Game_State.projectiles, index)
+			// unordered_remove(&g_Game_State.projectiles, index)
+			RemoveFromArray(&g_Game_State.projectiles, projectile)
 			continue
 		}
 		EntityMove(projectile)

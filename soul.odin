@@ -68,7 +68,7 @@ SoulsUpdate :: proc(souls : ..^Soul) {
                     rl.WHITE
                 ))
             g_Game_State.collected_souls += 1
-            unordered_remove(&g_Game_State.souls_drops, index)
+            RemoveFromArray(&g_Game_State.souls_drops, soul)
         }
         ParticleEmitterUpdate(&soul.particleEmitter)
         // fmt.println(TIMERS[soul.particleEmitter.id])

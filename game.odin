@@ -166,7 +166,7 @@ init :: proc() {
 										UPDATE
 ////////////////////////////////////////////////////////////////////////////////////////// */
 update :: proc() {
-	
+
 	switch g_Game_State.level_state {
 		case .INIT:
 			if len(g_Game_State.enemy) == 0 {
@@ -221,12 +221,7 @@ update :: proc() {
 				}
 			}
 
-			{ //CAMERA
-				camera.offset = {f32(rl.GetScreenWidth()/2), f32(rl.GetScreenHeight()/2)}
-				camera.target = g_Game_State.player.pos
-				camera.zoom += rl.GetMouseWheelMove()/10
-				camera.zoom = rl.Clamp(g_Game_State.camera.zoom, 1,5)
-			}
+
 
 			if g_Game_State.remaning_time <= 0 {
 				// g_Game_State.current_level += 1
@@ -265,6 +260,12 @@ update :: proc() {
 		if rl.IsKeyPressed(.Y) {
 			plater_attack = !plater_attack
 		}
+	}
+	{ //CAMERA
+		camera.offset = {f32(rl.GetScreenWidth()/2), f32(rl.GetScreenHeight()/2)}
+		camera.target = g_Game_State.player.pos
+		camera.zoom += rl.GetMouseWheelMove()/10
+		camera.zoom = rl.Clamp(g_Game_State.camera.zoom, 1,5)
 	}
 }
 

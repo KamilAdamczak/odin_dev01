@@ -68,7 +68,8 @@ destroyGlobalParticleEmitter :: proc(gameState : ^Game_State ,particleEmitter : 
         
         if emitter.id == particleEmitter.id {
             delete_key(&TIMERS, particleEmitter.id)
-            unordered_remove(&gameState.particleEmitters, index)
+            // unordered_remove(&gameState.particleEmitters, index)
+            RemoveFromArray(&gameState.particleEmitters, emitter)
         }
     }
 }

@@ -235,3 +235,17 @@ convert_to_pointers :: proc(array_of_object : ..$T) -> []^T {
 	}
 	return pointers
 }
+
+RemoveFromArray :: proc(arr : ^$T, valueToRemove : $S) {
+	cp_arr : T
+	for item in arr {
+		if item.id == valueToRemove.id {
+			continue
+		} else {
+			append(&cp_arr, item)
+		}
+	}
+	clear(arr)
+	append(arr, ..cp_arr[:])
+	// arr = make(cp_arr)
+}

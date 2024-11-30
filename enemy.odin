@@ -35,7 +35,8 @@ updateEnemy :: proc() {
 			delete_key(&TIMERS, ent.id)
 			delete_key(&TIMERS, combine(ent.id,"ATTACK"))
 			append(&g_Game_State.souls_drops, createSoul(ent.pos))
-			unordered_remove(&g_Game_State.enemy, index)
+			// unordered_remove(&g_Game_State.enemy, index)
+			RemoveFromArray(&g_Game_State.enemy, ent)
 			spawnCount -= 1
 			g_Game_State.killed_mobs += 1
 			continue
@@ -95,6 +96,7 @@ updateEnemy :: proc() {
 		}
 		if !collision {
 			EntityMove(&ent)
+			// ent.pos = rl.Vector2MoveTowards(ent.pos, ent.pos+ent.direction, ent.speed*100*rl.GetFrameTime())
 			ent.state = .MOVE
 		} else {
 			if ent.state != .ATTACK {

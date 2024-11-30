@@ -21,6 +21,7 @@ DRAW_COLLIDERS := false
 LOOP_STATE: LOOP_STATE_VALUES = .INIT
 main :: proc() {
 	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
+	// rl.SetTargetFPS(140)
 	init()
 	for !rl.WindowShouldClose() {
 		TICK_TIMER -= rl.GetFrameTime() //get delta time
