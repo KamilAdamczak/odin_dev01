@@ -204,7 +204,7 @@ EntityDrawTint :: proc(entities: ..Entity, tint: rl.Color = rl.WHITE) {
 				!ent.texture.flip ? f32(ent.texture.texture_scale.x) : -f32(ent.texture.texture_scale.x),
 				f32(ent.texture.texture_scale.y),
 			},
-			{f32(ent.pos.x)+ent.texture.offset.x, f32(ent.pos.y)+ent.texture.offset.y, 16.0, 16.0},
+			{f32(ent.pos.x)+ent.texture.offset.x, f32(ent.pos.y)+ent.texture.offset.y, f32(ent.texture.texture_scale.x), f32(ent.texture.texture_scale.y)},
 			{8, 8},
 			ent.rotation,
 			ent.color != {} ? ent.color : tint,

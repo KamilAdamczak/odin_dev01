@@ -90,9 +90,7 @@ updateEnemy :: proc() {
 		}
 		if checkCollision(ent, g_Game_State.player) {
 			collision = true
-			
 			ent.state = .ATTACK
-			
 		}
 		if !collision {
 			EntityMove(&ent)

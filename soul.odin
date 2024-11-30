@@ -35,7 +35,7 @@ createSoul :: proc(position : Vec2f)->Soul{
             }
     // soul.collider = SetCollider(.OVAL, Vec2f{10, 0})
     soul.id = genRandString(20)
-    soul.speed = 100
+    soul.speed = 150
     TIMERS[soul.id] = 0
     return soul
 }

@@ -23,6 +23,7 @@ Game_State :: struct {
 	remaning_time      : int,
 	souls_drops        : [dynamic]Soul,
 	collected_souls    : int,
+	deathReaper        : Enemy,
 }
 
 LEVEL_STATE :: enum {
@@ -99,6 +100,33 @@ init :: proc() {
 		g_Game_State.player.maxHP = 10
 		g_Game_State.player.currentHP = g_Game_State.player.maxHP
 		TIMERS["player"] = 0.0
+	}
+	{//DeathReaper
+		g_Game_State.deathReaper = Enemy {
+			ent = createEntity(
+				g_Game_State.player.pos + {30,30},
+				spd = 1,
+				dir = {},
+				spr = createSprite(
+					g_Game_State.assets["atlas"],
+					{2,2},
+					{32,32}),
+				col = rl.WHITE,
+				hp = 1000,
+				coll = SetCollider(.OVAL, Vec2f{16,0}),
+				identification = genRandString(20),
+				)
+		}
+
+
+
+		// Enemy :: struct {
+		// 	using ent: Entity,
+		// 	projectiles : [dynamic]Projectile,
+		// 	state : enemyState,
+		// 	currentDir : int,
+		// 	attackSpeed : f64,
+		// }
 	}
 
 	
@@ -275,7 +303,10 @@ update :: proc() {
 draw :: proc() {
 	
 	entitySort := EntitySort(
-		{g_Game_State.player},
+		{
+			g_Game_State.player, 
+			g_Game_State.deathReaper,
+		},
 		[dynamic][dynamic]Entity{
 									getFromStruct(..g_Game_State.enemy[:], fieldAccessor = proc(ent: ^Enemy) -> Entity {return ent.ent;}) , 
 									getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(ent: ^Projectile) -> Entity {return ent.ent;}),
