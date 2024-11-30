@@ -14,7 +14,7 @@ Game_State :: struct {
 	enemySpawnTime     : f64,
 	projectiles        : [dynamic]Projectile,
 	assets             : map[string]rl.Texture2D,
-	particleEmmiters   : [dynamic]ParticleEmitter,
+	particleEmitters   : [dynamic]ParticleEmitter,
 	whiteSquareTexture : Sprite,
 	current_level      : int,
 	level_state        : LEVEL_STATE,
@@ -22,6 +22,7 @@ Game_State :: struct {
 	spawnedEnemies     : int,
 	remaning_time      : int,
 	souls_drops        : [dynamic]Soul,
+	collected_souls    : int,
 }
 
 LEVEL_STATE :: enum {
@@ -41,7 +42,7 @@ g_Game_State := Game_State {
 
 
 waves_time := map[int]int {
-	1 = 20,
+	1 = 120,
 	2 = 50,
 	3 = 80,
 }
@@ -93,6 +94,7 @@ init :: proc() {
 		}
 
 		g_Game_State.player.collider = SetCollider(.OVAL, Vec2f{10, 0})
+		g_Game_State.player.dropCollider = SetCollider(.OVAL, Vec2f{45, 0})
 		g_Game_State.player.state = .IDLE
 		g_Game_State.player.maxHP = 10
 		g_Game_State.player.currentHP = g_Game_State.player.maxHP
@@ -189,9 +191,12 @@ update :: proc() {
 			}
 
 			{//PARTICLE EMMITTERS
-				for &emitter in g_Game_State.particleEmmiters {
+				for &emitter in g_Game_State.particleEmitters {
 					ParticleEmitterUpdate(&emitter)
 				}
+			}
+			{//Souls
+				SoulsUpdate(..convert_to_pointers(..g_Game_State.souls_drops[:])[:])
 			}
 
 			{//Projectilesarray_of_object
@@ -272,7 +277,8 @@ draw :: proc() {
 		{g_Game_State.player},
 		[dynamic][dynamic]Entity{
 									getFromStruct(..g_Game_State.enemy[:], fieldAccessor = proc(ent: ^Enemy) -> Entity {return ent.ent;}) , 
-									getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(ent: ^Projectile) -> Entity {return ent.ent;})
+									getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(ent: ^Projectile) -> Entity {return ent.ent;}),
+									getFromStruct(..g_Game_State.souls_drops[:], fieldAccessor = proc(ent: ^Soul) -> Entity {return ent.ent;})
 								},
 	)
 	//getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(p: ^Projectile) -> ParticleEmitter {return p.particleEmitter;})
@@ -291,14 +297,25 @@ draw :: proc() {
 			EntityDraw(..shadows[:])
 		}
 	}
-
 	LOOP_STATE = .DRAW_SPRITES
-	ParticleEmitterDraw(..getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(p: ^Projectile) -> ParticleEmitter {return p.particleEmitter;})[:])
 
+	if(rl.IsKeyDown(.L)) {
+		fmt.println("Start")
+		fmt.println("Start")
+		fmt.println(getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(p: ^Projectile) -> ParticleEmitter {return p.particleEmitter;})[:])
+		fmt.println("STOP")
+		fmt.println("STOP")
+	}
+	ParticleEmitterDraw(..getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(p: ^Projectile) -> ParticleEmitter {return p.particleEmitter;})[:])
+	ParticleEmitterDraw(..getFromStruct(..g_Game_State.souls_drops[:], fieldAccessor = proc(p: ^Soul) -> ParticleEmitter {return p.particleEmitter;})[:])
 	EntityDraw(..entitySort[:])
+	if DRAW_COLLIDERS {
+		rl.DrawCircleLines(i32(g_Game_State.player.pos.x), i32(g_Game_State.player.pos.y), g_Game_State.player.dropCollider.size.x, rl.BLUE,)
+	}
 	
-	ParticleEmitterDraw(..g_Game_State.particleEmmiters[:])
-	soulDraw(..g_Game_State.souls_drops[:])
+	
+	ParticleEmitterDraw(..g_Game_State.particleEmitters[:])
+	
 	
 	delete(entitySort)
 
@@ -351,6 +368,16 @@ drawGui :: proc() {
 		timerOrigin := setTextAlign(timerStr, timerFont, timerFontSize, timerSpacing, .CENTER)
 		rl.DrawTextPro(timerFont,timerStr,timerposition ,timerOrigin,0.0,timerFontSize,timerSpacing,rl.WHITE)
 	}
+
+		{//DisplaySouls
+			timerStr := rl.TextFormat("Collected Souls: %i", g_Game_State.collected_souls)
+			timerFont := rl.GetFontDefault()
+			timerFontSize : f32 = 20
+			timerSpacing : f32 = 2
+			timerposition : rl.Vector2 = {10, 60}
+			timerOrigin := setTextAlign(timerStr, timerFont, timerFontSize, timerSpacing, .LEFT)
+			rl.DrawTextPro(timerFont,timerStr,timerposition ,timerOrigin,0.0,timerFontSize,timerSpacing,rl.WHITE)
+		}
 }
 
 

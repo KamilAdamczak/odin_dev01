@@ -10,6 +10,7 @@ Player :: struct {
 	currentDir : int,
 	maxHP : f32,
 	currentHP: f32,
+	dropCollider : Collider,
 }
 
 playerState :: enum {
@@ -28,6 +29,7 @@ playerAnimations := map[string]playerAnimation {
 }
 
 playerUpdate :: proc() {
+	g_Game_State.player.dropCollider.pos = g_Game_State.player.pos
 	if rl.IsKeyDown(.A) {
 		g_Game_State.player.direction.x = -1
 	}

@@ -28,7 +28,7 @@ spawnProjectile :: proc(position: Vec2f, direction: Vec2f) {
 		dmg = 10,
 	}
 	projectile.collider = SetCollider(.OVAL, Vec2f{4.0, 0.0})
-	projectile.particleEmitter = createParticleEmmiter(projectile.pos, projectile.direction, 1.0, projectile.texture, 100000000)
+	projectile.particleEmitter = createParticleEmitter(projectile.pos, projectile.direction, .005, projectile.texture, 1)
 	append(&g_Game_State.projectiles, projectile)
 }
 
@@ -40,7 +40,7 @@ updateProjectiles :: proc(projectiles : ..^Projectile) {
 			projectile.dmg = 0
 			projectile.color = rl.Color {0,0,0,0}
 			clearTimers(projectile.particleEmitter)
-			ordered_remove(&g_Game_State.projectiles, index)
+			unordered_remove(&g_Game_State.projectiles, index)
 			continue
 		}
 		EntityMove(projectile)

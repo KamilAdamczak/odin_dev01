@@ -18,6 +18,7 @@ Entity :: struct {
 }
 
 Collider :: struct {
+	pos : Vec2f,
 	type: ColliderType,
 	size: Vec2f,
 }
@@ -28,8 +29,8 @@ ColliderType :: enum {
 	OVAL,
 }
 
-createEntity :: proc(position : Vec2f = 0, spd : f32 = 0, dir : Vec2f = {0,0}, spr : Sprite = g_Game_State.whiteSquareTexture, col : rl.Color = rl.WHITE, hp : int = 0, coll : Collider, identification : string = "", rot : f32 = 0.0) -> Entity {
-	return Entity {
+createEntity :: proc(position : Vec2f = 0, spd : f32 = 0, dir : Vec2f = {0,0}, spr : Sprite = g_Game_State.whiteSquareTexture, col : rl.Color = rl.WHITE, hp : int = 0, coll : Collider, identification : string = "", rot : f32 = 0.0) -> (ent : Entity) {
+	ent = Entity {
 		pos  = position,
 		speed     = spd,
 		direction = dir,
@@ -40,6 +41,8 @@ createEntity :: proc(position : Vec2f = 0, spd : f32 = 0, dir : Vec2f = {0,0}, s
 		id        = identification,
 		rotation  = rot,
 	}
+	ent.collider.pos = ent.pos
+	return ent
 }
 
 getColliderRect :: proc(ent: Entity) -> rl.Rectangle {
@@ -90,6 +93,8 @@ checkCollision :: proc(entA: Entity, entB: Entity) -> bool {
 	return false
 }
 
+
+
 SetColliderEnt :: proc(type: ColliderType, ent: Entity) -> Collider {
 	col: Collider
 	col.type = type
@@ -132,6 +137,7 @@ EntityMove :: proc(body: ^Entity) {
 	} else if body.direction.x > 0 {
 		body.texture.flip = false
 	}
+	body.collider.pos = body.pos
 }
 
 EntityFutureMove :: proc(body: Entity) -> Entity {
@@ -225,4 +231,52 @@ EntitySortArray :: proc(arrayOfEntities: [dynamic]Entity) -> [dynamic]Entity {
 EntitySort :: proc {
 	EntitySortArray,
 	EntitySortList,
+}
+
+getColliderRectCol :: proc(coll: Collider) -> rl.Rectangle {
+	rect := rl.Rectangle {
+		f32(coll.pos.x) - f32(coll.size.x) / 2,
+		f32(coll.pos.y) - f32(coll.size.y) / 2,
+		coll.size.x,
+		coll.size.y,
+	}
+	return rect
+}
+
+getColliderCircleCol :: proc(coll: Collider) -> Circle {
+	circ := Circle{rl.Vector2{coll.pos.x, coll.pos.y}, coll.size.x}
+	return circ
+}
+
+checkCollisionCollider :: proc(collA: Collider, collB: Collider) -> bool {
+	switch collA.type {
+	case .OVAL:
+		switch collB.type {
+		case .OVAL:
+			return rl.CheckCollisionCircles(
+				getColliderCircleCol(collA).center,
+				getColliderCircleCol(collA).r,
+				getColliderCircleCol(collB).center,
+				getColliderCircleCol(collB).r,
+			)
+		case .RECT, .BOX:
+			return rl.CheckCollisionCircleRec(
+				getColliderCircleCol(collA).center,
+				getColliderCircleCol(collA).r,
+				getColliderRectCol(collB),
+			)
+		}
+	case .RECT, .BOX:
+		switch collB.type {
+		case .OVAL:
+			return rl.CheckCollisionCircleRec(
+				getColliderCircleCol(collB).center,
+				getColliderCircleCol(collB).r,
+				getColliderRectCol(collB),
+			)
+		case .RECT, .BOX:
+			return rl.CheckCollisionRecs(getColliderRectCol(collA), getColliderRectCol(collB))
+		}
+	}
+	return false
 }
