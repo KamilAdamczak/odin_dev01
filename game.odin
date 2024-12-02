@@ -33,34 +33,35 @@ LEVEL_STATE :: enum {
 	END,
 }
 
-g_Game_State := Game_State {
-	camera = rl.Camera2D{
-		offset = {1280 / 2, 720 / 2}, 
-		zoom = 2
-	},
-	enemySpawnTime = .5,
-}
-
-
-waves_time := map[int]int {
-	1 = 120,
-	2 = 50,
-	3 = 80,
-}
-
+g_Game_State : Game_State 
+waves_time : map[int]int 
 levelUpWindow : [2]guiWindow
-
-Creditsy : string = "GAME MADE BY KAMIL ADAMCZAK, and Kikołaj via Discord"
-
 camera := &g_Game_State.camera
+spawnCount :int 
 
-spawnCount := 1
 DRAW_SHADOWS := true
 plater_attack := true
 
-init :: proc() {
+load_stack := [dynamic]any {g_Game_State, waves_time,levelUpWindow,camera,spawnCount,DRAW_SHADOWS,plater_attack}
+
+game_screen_init :: proc() {
+	g_Game_State = Game_State {
+		camera = rl.Camera2D{
+			offset = {1280 / 2, 720 / 2}, 
+			zoom = 2
+		},
+		enemySpawnTime = .5,
+	}
+	
+	waves_time = map[int]int {
+		1 = 120,
+		2 = 50,
+		3 = 80,
+	}
+	
+	spawnCount= 1
 	sFPS.show = true
-	rl.InitWindow(1280, 720, "vampire")
+	// rl.InitWindow(1280, 720, "vampire")
 	//LOAD ASSETS	
 	g_Game_State.assets = {
 		"atlas" = rl.LoadTexture("./assets/atlas.png"),
@@ -193,7 +194,7 @@ init :: proc() {
 /* ///////////////////////////////////////////////////////////////////////////////////////////
 										UPDATE
 ////////////////////////////////////////////////////////////////////////////////////////// */
-update :: proc() {
+game_screen_update :: proc() {
 
 	switch g_Game_State.level_state {
 		case .INIT:
@@ -295,12 +296,16 @@ update :: proc() {
 		camera.zoom += rl.GetMouseWheelMove()/10
 		camera.zoom = rl.Clamp(g_Game_State.camera.zoom, 1,5)
 	}
+
+	if rl.IsKeyPressed(.BACKSPACE) {
+		changeScreen(CURRENT_SCREEN, .GAME)
+	}
 }
 
 /* ///////////////////////////////////////////////////////////////////////////////////////////
 										DRAW
 ////////////////////////////////////////////////////////////////////////////////////////// */
-draw :: proc() {
+game_screen_draw :: proc() {
 	
 	entitySort := EntitySort(
 		{
@@ -355,7 +360,7 @@ draw :: proc() {
 	playerDrawHealth()
 }
 
-drawGui :: proc() {
+game_screen_drawGui :: proc() {
 	
 	text := rl.TextFormat("WELCOME IN SHOP")
 	if(g_Game_State.level_state == .SHOPPING) {
