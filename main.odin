@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import rl "vendor:raylib"
 
+
 SFPS :: struct {
 	show:  bool,
 	pos:   Vec2i,
@@ -31,8 +32,14 @@ DRAW_COLLIDERS := false
 LOOP_STATE: LOOP_STATE_VALUES = .INIT
 main :: proc() {
 	
-	rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
+	// rl.SetConfigFlags({.WINDOW_RESIZABLE, .VSYNC_HINT})
 	rl.InitWindow(1280, 720, "vampire")
+	// { //WINDOW ICON
+	// 	icon: rl.Image
+	// 	icon = rl.LoadImageFromTexture(MENU_g_Game_State.assets["atlas"])
+	// 	icon = rl.ImageFromImage(icon, {0.0, 32.0, 16.0, 16.0})
+	// 	rl.SetWindowIcon(icon)
+    // }
 	// rl.SetTargetFPS(140)
 	for !rl.WindowShouldClose() {
 		switch CURRENT_SCREEN  {
@@ -45,7 +52,6 @@ main :: proc() {
 				rl.CloseWindow()
 		}
 	}
-
 }
 
 menu_screen :: proc() {

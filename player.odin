@@ -23,9 +23,39 @@ playerAnimation :: struct {
 	rightAngle : f32,
 	leftAngle : f32,
 }
- 
+
+frameAnimation :: struct {
+	current_frame : int,
+	frames : [dynamic]Sprite,
+	speed : f32,
+}
+
+attackAnimation :frameAnimation
+
+
 playerAnimations := map[string]playerAnimation {
 	"RUN" = {1, 30,-30},
+}
+
+playerAttack :: proc() {
+	frame := attackAnimation.frames[attackAnimation.current_frame] 
+		rl.DrawTexturePro(
+			frame.texture,
+			{
+				f32(frame.atlas_pos.x) * 16,
+				f32(frame.atlas_pos.y) * 16,
+				f32(frame.texture_scale.x) * -g_Game_State.player.direction.x,
+				f32(frame.texture_scale.y),
+			},
+			{f32(g_Game_State.player.pos.x) + 10 * g_Game_State.player.direction.x, f32(g_Game_State.player.pos.y), f32(frame.texture_scale.x), f32(frame.texture_scale.y),},
+			{16* -g_Game_State.player.direction.x, 16},
+			0.0,
+			rl.WHITE,
+		)
+		// attackAnimation.current_frame += 1
+	if attackAnimation.current_frame >= len(attackAnimation.frames) {
+		attackAnimation.current_frame = 0
+	}
 }
 
 playerUpdate :: proc() {

@@ -7,24 +7,17 @@ import "core:slice"
 import rl "vendor:raylib"
 
 MENU_Game_State :: struct {
-	// worldGrid          : [WORLD_GRID.x][WORLD_GRID.y]Tile,
 	camera             : rl.Camera2D,
-	// player             : Player,
-	// enemy              : [dynamic]Enemy,
-	// enemySpawnTime     : f64,
-	// projectiles        : [dynamic]Projectile,
 	assets             : map[string]rl.Texture2D,
-	// particleEmitters   : [dynamic]ParticleEmitter,
 	whiteSquareTexture : Sprite,
-	// current_level      : int,
-	// level_state        : LEVEL_STATE,
-	// killed_mobs        : int,
-	// spawnedEnemies     : int,
-	// remaning_time      : int,
-	// souls_drops        : [dynamic]Soul,
-	// collected_souls    : int,
-	// deathReaper        : Enemy,
 	start : bool,
+	menuItems : [dynamic]MenuItem,
+}
+
+MenuItem :: struct {
+	name : cstring,
+	boolean : bool,
+	screen : GAME_SCREEN
 }
 
 
@@ -39,7 +32,12 @@ menu_screen_init :: proc() {
 		},
 		start = false
 	}
-	sFPS.show = true
+	sFPS.show = false
+
+	append(&MENU_g_Game_State.menuItems,
+		MenuItem{"Start", false, .GAME},
+		// MenuItem{"Options", false, .GAME},
+		MenuItem{"Exit", false, .EXIT})
 
 	//LOAD ASSETS	
 	MENU_g_Game_State.assets = {
@@ -48,7 +46,7 @@ menu_screen_init :: proc() {
 
 	MENU_g_Game_State.whiteSquareTexture = createSprite(MENU_g_Game_State.assets["atlas"], {1,2})
 	
-	{ //WINDOW ICON
+	{ //WINDOW ICON TODO: Create .ico file and move this to main with load
 		icon: rl.Image
 		icon = rl.LoadImageFromTexture(MENU_g_Game_State.assets["atlas"])
 		icon = rl.ImageFromImage(icon, {0.0, 32.0, 16.0, 16.0})
@@ -61,8 +59,10 @@ menu_screen_init :: proc() {
 										UPDATE
 ////////////////////////////////////////////////////////////////////////////////////////// */
 menu_screen_update :: proc() {
-	if rl.IsKeyDown(.ENTER) || MENU_g_Game_State.start{
-		changeScreen(CURRENT_SCREEN, .GAME)
+	for &item, i in MENU_g_Game_State.menuItems {
+		if item.boolean {
+			changeScreen(CURRENT_SCREEN, item.screen)
+		}
 	}
 }
 
@@ -72,9 +72,14 @@ menu_screen_update :: proc() {
 menu_screen_draw :: proc() {
 	
 }
-
 menu_screen_drawGui :: proc() {
-	MENU_g_Game_State.start = rl.GuiButton(rl.Rectangle{100,100,120,50},"START")
+	{
+		menuposition := rl.Rectangle{cast(f32)rl.GetScreenWidth()/2-110,150,220,100}
+		for &item, i in MENU_g_Game_State.menuItems {
+			menuposition := rl.Rectangle{cast(f32)rl.GetScreenWidth()/2-110,200+110*f32(i),220,100}
+			item.boolean = rl.GuiButton(menuposition,item.name)
+		}
+	}
 }
 
 

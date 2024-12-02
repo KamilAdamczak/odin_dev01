@@ -101,6 +101,18 @@ game_screen_init :: proc() {
 		g_Game_State.player.maxHP = 10
 		g_Game_State.player.currentHP = g_Game_State.player.maxHP
 		TIMERS["player"] = 0.0
+
+		attackAnimation = frameAnimation{
+			frames = {
+				createSprite(g_Game_State.assets["atlas"],{4,0},{16,32},{0,0},false),
+				createSprite(g_Game_State.assets["atlas"],{4,1},{16,32},{0,0},false),
+				createSprite(g_Game_State.assets["atlas"],{4,2},{16,32},{0,0},false),
+				createSprite(g_Game_State.assets["atlas"],{5,0},{16,32},{0,0},false),
+				createSprite(g_Game_State.assets["atlas"],{5,1},{16,32},{0,0},false),
+				createSprite(g_Game_State.assets["atlas"],{5,2},{16,32},{0,0},false),
+			},
+			speed = .1,
+		}
 	}
 	{//DeathReaper
 		g_Game_State.deathReaper = Enemy {
@@ -349,8 +361,9 @@ game_screen_draw :: proc() {
 	if DRAW_COLLIDERS {
 		rl.DrawCircleLines(i32(g_Game_State.player.pos.x), i32(g_Game_State.player.pos.y), g_Game_State.player.dropCollider.size.x, rl.BLUE,)
 	}
-	
-	
+	// playerAttack()
+	playerAttack()
+
 	ParticleEmitterDraw(..g_Game_State.particleEmitters[:])
 	
 	
@@ -361,6 +374,7 @@ game_screen_draw :: proc() {
 }
 
 game_screen_drawGui :: proc() {
+	
 	
 	text := rl.TextFormat("WELCOME IN SHOP")
 	if(g_Game_State.level_state == .SHOPPING) {
