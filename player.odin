@@ -38,6 +38,10 @@ playerAnimations := map[string]playerAnimation {
 }
 
 playerAttack :: proc() {
+	if attackAnimation.current_frame >= len(attackAnimation.frames) {
+		attackAnimation.current_frame = 0
+	}
+	
 	frame := attackAnimation.frames[attackAnimation.current_frame] 
 		rl.DrawTexturePro(
 			frame.texture,
@@ -47,15 +51,11 @@ playerAttack :: proc() {
 				f32(frame.texture_scale.x) * -g_Game_State.player.direction.x,
 				f32(frame.texture_scale.y),
 			},
-			{f32(g_Game_State.player.pos.x) + 10 * g_Game_State.player.direction.x, f32(g_Game_State.player.pos.y), f32(frame.texture_scale.x), f32(frame.texture_scale.y),},
-			{16* -g_Game_State.player.direction.x, 16},
+			{f32(g_Game_State.player.pos.x)+20 * g_Game_State.player.direction.x, f32(g_Game_State.player.pos.y), f32(frame.texture_scale.x), f32(frame.texture_scale.y),},
+			{8, 16},
 			0.0,
 			rl.WHITE,
 		)
-		// attackAnimation.current_frame += 1
-	if attackAnimation.current_frame >= len(attackAnimation.frames) {
-		attackAnimation.current_frame = 0
-	}
 }
 
 playerUpdate :: proc() {

@@ -101,15 +101,15 @@ game_screen_init :: proc() {
 		g_Game_State.player.maxHP = 10
 		g_Game_State.player.currentHP = g_Game_State.player.maxHP
 		TIMERS["player"] = 0.0
-
+		TIMERS["player_slash"] = 0.0
 		attackAnimation = frameAnimation{
 			frames = {
 				createSprite(g_Game_State.assets["atlas"],{4,0},{16,32},{0,0},false),
-				createSprite(g_Game_State.assets["atlas"],{4,1},{16,32},{0,0},false),
 				createSprite(g_Game_State.assets["atlas"],{4,2},{16,32},{0,0},false),
+				createSprite(g_Game_State.assets["atlas"],{4,4},{16,32},{0,0},false),
 				createSprite(g_Game_State.assets["atlas"],{5,0},{16,32},{0,0},false),
-				createSprite(g_Game_State.assets["atlas"],{5,1},{16,32},{0,0},false),
 				createSprite(g_Game_State.assets["atlas"],{5,2},{16,32},{0,0},false),
+				createSprite(g_Game_State.assets["atlas"],{5,4},{16,32},{0,0},false),
 			},
 			speed = .1,
 		}
@@ -355,6 +355,8 @@ game_screen_draw :: proc() {
 		fmt.println("STOP")
 		fmt.println("STOP")
 	}
+
+	timerRun(&TIMERS["player_slash"], .07, rl.GetTime(), proc() {	attackAnimation.current_frame += 1}) 
 	ParticleEmitterDraw(..getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(p: ^Projectile) -> ParticleEmitter {return p.particleEmitter;})[:])
 	ParticleEmitterDraw(..getFromStruct(..g_Game_State.souls_drops[:], fieldAccessor = proc(p: ^Soul) -> ParticleEmitter {return p.particleEmitter;})[:])
 	EntityDraw(..entitySort[:])
