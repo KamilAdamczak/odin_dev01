@@ -26,8 +26,9 @@ playerAnimation :: struct {
 
 frameAnimation :: struct {
 	current_frame : int,
-	frames : [dynamic]Sprite,
-	speed : f32,
+	frames        : [dynamic]Sprite,
+	speed         : f32,
+	finish        : bool,
 }
 
 attackAnimation :frameAnimation
@@ -40,6 +41,7 @@ playerAnimations := map[string]playerAnimation {
 playerAttack :: proc() {
 	if attackAnimation.current_frame >= len(attackAnimation.frames) {
 		attackAnimation.current_frame = 0
+		attackAnimation.finish = true
 	}
 	
 	frame := attackAnimation.frames[attackAnimation.current_frame] 
@@ -48,10 +50,10 @@ playerAttack :: proc() {
 			{
 				f32(frame.atlas_pos.x) * 16,
 				f32(frame.atlas_pos.y) * 16,
-				f32(frame.texture_scale.x) * -g_Game_State.player.direction.x,
+				g_Game_State.player.texture.flip ? f32(frame.texture_scale.x) : -f32(frame.texture_scale.x),
 				f32(frame.texture_scale.y),
 			},
-			{f32(g_Game_State.player.pos.x)+20 * g_Game_State.player.direction.x, f32(g_Game_State.player.pos.y), f32(frame.texture_scale.x), f32(frame.texture_scale.y),},
+			{!g_Game_State.player.texture.flip ?f32(g_Game_State.player.pos.x)+20 : f32(g_Game_State.player.pos.x)-20, f32(g_Game_State.player.pos.y), f32(frame.texture_scale.x), f32(frame.texture_scale.y),},
 			{8, 16},
 			0.0,
 			rl.WHITE,

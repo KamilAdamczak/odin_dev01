@@ -29,7 +29,11 @@ ColliderType :: enum {
 	OVAL,
 }
 
-createEntity :: proc(position : Vec2f = 0, spd : f32 = 0, dir : Vec2f = {0,0}, spr : Sprite = g_Game_State.whiteSquareTexture, col : rl.Color = rl.WHITE, hp : int = 0, coll : Collider, identification : string = "", rot : f32 = 0.0) -> (ent : Entity) {
+createEntity :: proc(
+	position : Vec2f = 0, spd : f32 = 0, dir : Vec2f = {0,0}, 
+	spr : Sprite = g_Game_State.whiteSquareTexture, col : rl.Color = rl.WHITE, 
+	hp : int = 0, coll : Collider, identification : string = "", 
+	rot : f32 = 0.0) -> (ent : Entity) {
 	ent = Entity {
 		pos  = position,
 		speed     = spd,

@@ -112,6 +112,7 @@ game_screen_init :: proc() {
 				createSprite(g_Game_State.assets["atlas"],{5,4},{16,32},{0,0},false),
 			},
 			speed = .1,
+			finish = true,
 		}
 	}
 	{//DeathReaper
@@ -221,6 +222,10 @@ game_screen_update :: proc() {
 			
 			{//PLAYER
 				playerUpdate()
+				if !attackAnimation.finish {
+					timerRun(&TIMERS["player_slash"], .07, rl.GetTime(), proc() {	attackAnimation.current_frame += 1}) 
+				}
+				
 			}
 
 			{//ENEMY
@@ -245,19 +250,20 @@ game_screen_update :: proc() {
 				// fmt.println(slice.as_ptr(g_Game_State.projectiles[:])[:])
 				if len(g_Game_State.enemy) > 0 && plater_attack {
 					timerRun(&TIMERS["two"], g_Game_State.player.attackSpeed, rl.GetTime(), proc() {
-						spawnProjectile(
-							g_Game_State.player.ent.pos,
-							calcDirection(
-										g_Game_State.player.pos, 
-										closesTarget(
-														g_Game_State.player, 
-														..getFromStruct(
-																		..g_Game_State.enemy[:], 
-																		fieldAccessor = proc(ent: ^Enemy) -> Entity {return ent.ent;}
-																		)[:]
-													).pos
-							)
-						)
+						attackAnimation.finish = false
+						// spawnProjectile(
+						// 	g_Game_State.player.ent.pos,
+						// 	calcDirection(
+						// 				g_Game_State.player.pos, 
+						// 				closesTarget(
+						// 								g_Game_State.player, 
+						// 								..getFromStruct(
+						// 												..g_Game_State.enemy[:], 
+						// 												fieldAccessor = proc(ent: ^Enemy) -> Entity {return ent.ent;}
+						// 												)[:]
+						// 							).pos
+						// 	)
+						// )
 					})
 				}
 			}
@@ -356,18 +362,18 @@ game_screen_draw :: proc() {
 		fmt.println("STOP")
 	}
 
-	timerRun(&TIMERS["player_slash"], .07, rl.GetTime(), proc() {	attackAnimation.current_frame += 1}) 
 	ParticleEmitterDraw(..getFromStruct(..g_Game_State.projectiles[:], fieldAccessor = proc(p: ^Projectile) -> ParticleEmitter {return p.particleEmitter;})[:])
 	ParticleEmitterDraw(..getFromStruct(..g_Game_State.souls_drops[:], fieldAccessor = proc(p: ^Soul) -> ParticleEmitter {return p.particleEmitter;})[:])
 	EntityDraw(..entitySort[:])
 	if DRAW_COLLIDERS {
 		rl.DrawCircleLines(i32(g_Game_State.player.pos.x), i32(g_Game_State.player.pos.y), g_Game_State.player.dropCollider.size.x, rl.BLUE,)
 	}
-	// playerAttack()
-	playerAttack()
 
 	ParticleEmitterDraw(..g_Game_State.particleEmitters[:])
 	
+	if !attackAnimation.finish {
+		playerAttack()
+	}
 	
 	delete(entitySort)
 
